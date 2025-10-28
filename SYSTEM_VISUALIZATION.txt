@@ -1,0 +1,567 @@
+================================================================================
+              CLAUDE CODE ORCHESTRATION SYSTEM - VISUAL REFERENCE
+================================================================================
+
+THE FOUR-LAYER ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 1: ORCHESTRATOR (YOU - MAIN CLAUDE INSTANCE)                          │
+│ ─────────────────────────────────────────────────────────────────────────── │
+│ • 200k context window                                                       │
+│ • Maintains todos via TodoWrite                                            │
+│ • Delegates one task at a time                                             │
+│ • Tracks overall progress                                                  │
+│ • Decides when research is needed                                          │
+│ • Invokes agents via Task tool                                             │
+│ • Updates todo list as agents complete                                     │
+└──────────────────────┬──────────────────────────────────────────────────────┘
+                       │ Invokes
+          ┌────────────┴────────────┬───────────────┬────────────────┐
+          ↓                         ↓               ↓                ↓
+
+┌──────────────────────┐ ┌──────────────────┐ ┌──────────────┐ ┌────────────┐
+│ LAYER 2A: RESEARCH   │ │ LAYER 2B: CODER  │ │ LAYER 2C:    │ │ LAYER 2D:  │
+│ AGENT                │ │ AGENT            │ │ TESTER AGENT │ │ STUCK      │
+│ ──────────────────── │ │ ────────────────── │ │ ────────────  │ │ AGENT      │
+│                      │ │                  │ │              │ │ ──────────  │
+│ Fresh context        │ │ Fresh context    │ │ Fresh context │ │ Fresh ctx  │
+│ Each invocation      │ │ Each invocation  │ │ Each invoke  │ │ On problem │
+│                      │ │                  │ │              │ │            │
+│ Tools:               │ │ Tools:           │ │ Tools:       │ │ Tools:     │
+│ • Bash               │ │ • Read           │ │ • Task       │ │ • AskUser  │
+│ • Read               │ │ • Write          │ │ • Read       │ │ • Bash     │
+│ • Write              │ │ • Edit           │ │ • Bash       │ │ • Read     │
+│ • Task               │ │ • Bash           │ │ • Playwright │ │ • Glob     │
+│                      │ │ • Glob/Grep      │ │   (via MCP)  │ │ • Grep     │
+│ Jobs:                │ │ • Task           │ │              │ │            │
+│ • Fetch docs         │ │                  │ │ Jobs:        │ │ Jobs:      │
+│ • Use Jina AI        │ │ Jobs:            │ │ • Navigate   │ │ • Ask      │
+│ • Store in cache     │ │ • Implement code │ │ • Screenshot │ │   humans   │
+│ • Index results      │ │ • Write files    │ │ • Click,     │ │ • Block    │
+│                      │ │ • Test locally   │ │   fill,test  │ │   progress │
+│                      │ │                  │ │ • Report     │ │ • Get      │
+│                      │ │                  │ │   pass/fail  │ │   decision │
+└──────────────────────┘ └──────────────────┘ │              │ │            │
+       ↓                         ↓             │              │ │            │
+  Stores in           Returns completion      │              │ │            │
+  .research-cache/    Escalates on error      │              │ │            │
+                                              │              │ │            │
+                                              └──────────────┘ └────────────┘
+                                                     ↓              ↑
+                                              Returns pass/fail   Returns decision
+
+LAYER 3: SHARED STORAGE & STATE
+════════════════════════════════════════════════════════════════════════════════
+
+.research-cache/
+├── index.json
+│   └── {
+│       "research_sessions": [
+│         {
+│           "id": "react-hooks-1729353600",
+│           "technology": "React Hooks",
+│           "file": "react-hooks-2025-10-19.md",
+│           "summary": "..."
+│         }
+│       ]
+│     }
+│
+└── react-hooks-2025-10-19.md
+    └── [Markdown documentation fetched from Jina AI]
+
+Project files (created by coder)
+├── index.js
+├── components/
+├── pages/
+└── ...
+
+LAYER 4: CONFIGURATION & INTEGRATION
+════════════════════════════════════════════════════════════════════════════════
+
+.claude/CLAUDE.md              ← Orchestrator instructions
+├── Tells Claude: "YOU ARE THE ORCHESTRATOR"
+├── Defines workflow steps
+├── Specifies when to invoke agents
+└── Enforces rules (no fallbacks, test everything)
+
+.claude/agents/
+├── coder.md                   ← Coder definition
+├── research.md                ← Research definition
+├── tester.md                  ← Tester definition
+└── stuck.md                   ← Stuck definition
+    Each with YAML: name, tools, model
+
+.mcp.json                      ← Playwright integration
+└── {
+    "mcpServers": {
+      "playwright": {
+        "command": "npx",
+        "args": ["@playwright/mcp@latest"]
+      }
+    }
+  }
+
+================================================================================
+                    THE WORKFLOW LOOP (WHAT HAPPENS)
+================================================================================
+
+USER INPUT
+    │
+    └─→ "Build a React todo app"
+         │
+         ↓
+    ORCHESTRATOR:
+    • Reads input
+    • Creates todo list via TodoWrite
+    • Sees: [ ] Setup React
+    •       [ ] Create components
+    •       [ ] Add state
+    •       [ ] Test all
+    │
+    └─→ Check first todo: "Setup React"
+         Does it mention new tech? YES → React
+         │
+         ↓
+    INVOKE RESEARCH AGENT (Task tool)
+    • Fresh context spawned
+    • Given: "Research React setup with latest docs"
+    • Coder steps:
+         1. Query Jina: "React setup latest official"
+         2. Fetch https://react.dev/learn
+         3. Save to .research-cache/react-setup-2025-10-19.md
+         4. Update .research-cache/index.json
+         5. Return: ".research-cache/react-setup-2025-10-19.md"
+    │
+    └─→ ORCHESTRATOR receives file path
+         │
+         ↓
+    INVOKE CODER AGENT (Task tool)
+    • Fresh context spawned
+    • Given: 
+         - Todo: "Setup React"
+         - Research: ".research-cache/react-setup-2025-10-19.md"
+    • Coder steps:
+         1. Read research file
+         2. Understand React setup best practices
+         3. Create package.json, src/, components/
+         4. Test with: npm install && npm start
+         5. IF ERROR → Invoke stuck agent (Task tool)
+                      └─ Stuck blocks, asks human: "npm failed, how?"
+                         Human decides → Return to coder
+                         Coder retries
+         6. Return: "React setup complete, running at localhost:3000"
+    │
+    └─→ ORCHESTRATOR receives completion
+         │
+         ↓
+    INVOKE TESTER AGENT (Task tool)
+    • Fresh context spawned
+    • Given: "Verify React app runs at localhost:3000"
+    • Tester steps:
+         1. Navigate to http://localhost:3000
+         2. Take screenshot: initial-load.png
+         3. Check: Does page appear? Is React logo showing?
+         4. Click buttons, test interactions
+         5. Take screenshots at mobile/tablet/desktop sizes
+         6. Check console for errors
+         7. IF VISUAL ISSUE → Invoke stuck agent (Task tool)
+                              └─ Stuck shows screenshot, asks: "Fix or accept?"
+                                 Human decides → Return to tester
+         8. Return: PASS or FAIL + screenshots
+    │
+    └─→ ORCHESTRATOR receives test result
+         │
+         IF PASS:
+         └─→ Mark todo: ✓ Setup React COMPLETE
+             Move to next todo [ ] Create components
+             REPEAT from "INVOKE RESEARCH AGENT" (if needed)
+         
+         IF FAIL:
+         └─→ Already handled above (stuck agent intervened)
+             Coder retried based on human feedback
+             Retest already happened or will happen
+             Loop back until pass
+
+    [Continue until all todos completed]
+
+    FINAL:
+    └─→ ORCHESTRATOR: "All todos complete! Project ready."
+
+================================================================================
+                   KEY MECHANISMS THAT MAKE IT WORK
+================================================================================
+
+1. TASK TOOL CREATES ISOLATED CONTEXTS
+   ───────────────────────────────────
+   invoke("coder", { todo: "X" })
+              ↓
+   Creates brand new context
+   ├─ Load coder.md
+   ├─ Provide only: todo, research files
+   ├─ Run coder with ONLY those inputs
+   └─ Close context (memory garbage collected)
+   
+   RESULT: Zero knowledge bleeding between invocations
+
+2. TOOL ALLOCATION PREVENTS SCOPE CREEP
+   ──────────────────────────────────────
+   Coder has Write    → Can create/modify code
+   Tester lacks Write → Cannot accidentally modify code
+   Stuck has AskUser  → ONLY stuck can ask humans
+   Research has Bash  → Can use curl for Jina AI
+   
+   RESULT: Agents stay in their lane
+
+3. MANDATORY ESCALATION PREVENTS FALLBACKS
+   ────────────────────────────────────────
+   Agent instructions say:
+   "IF error THEN invoke stuck NEVER fallback"
+   
+   Every agent reads this
+   Every agent follows this
+   Stuck is the ONLY escape hatch
+   
+   RESULT: No silent failures, no hidden workarounds
+
+4. ORCHESTRATOR MAINTAINS STATE (TodoWrite)
+   ──────────────────────────────────────────
+   Orchestrator visible state:
+   ✓ Completed todos
+   [ ] Pending todos
+   
+   Each agent is stateless (fresh each time)
+   Single source of truth = no conflicts
+   
+   RESULT: Always know where you are in project
+
+5. ONE TODO AT A TIME (No Batch Delegation)
+   ─────────────────────────────────────────
+   ✗ Bad:  invoke coder with [todo1, todo2, todo3]
+           Hard to test, test failure unclear which todo
+   
+   ✓ Good: invoke coder with todo1
+           Test todo1
+           Mark todo1 complete
+           Invoke coder with todo2
+   
+   RESULT: Precise error isolation
+
+6. MANDATORY TESTING WITH VISUAL PROOF
+   ────────────────────────────────────
+   ✗ Bad:  "Code looks good"
+           Assumption, can't verify
+   
+   ✓ Good: [Screenshot showing working page]
+           Visual proof, can't argue
+   
+   Test rule: "IF not in screenshot THEN it's not done"
+   
+   RESULT: Objective verification
+
+7. RESEARCH BEFORE CODING
+   ─────────────────────────
+   Old pattern:
+   Coder → "I'll figure out React as I code"
+   
+   New pattern:
+   Orchestrator → Research (get docs)
+   Coder reads docs → Codes with confidence
+   
+   RESULT: Better code, less trial-and-error
+
+8. FILE-BASED COMMUNICATION
+   ────────────────────────────
+   Orchestrator ──"Fetch X"──→ Research
+                              │
+                              ├─ fetch from Jina
+                              ├─ save to .research-cache/X.md
+                              └─ return filepath
+   
+   Orchestrator ──filepath──→ Coder
+                              │
+                              ├─ read .research-cache/X.md
+                              ├─ understand patterns
+                              └─ implement with confidence
+   
+   RESULT: Persistent, shareable, debuggable
+
+================================================================================
+                         STATE TRANSITIONS
+================================================================================
+
+ORCHESTRATOR STATES:
+
+Planning:
+  └─ Read user input
+     └─ Create todos with TodoWrite
+        └─ Move to: Checking Todo 1
+
+Checking Todo:
+  └─ If mentions new tech?
+     ├─ YES → Move to: Research Phase
+     └─ NO  → Move to: Delegating to Coder
+
+Research Phase:
+  └─ Invoke research agent
+     └─ Wait for result
+        └─ Receive: .research-cache/file.md
+           └─ Move to: Delegating to Coder
+
+Delegating to Coder:
+  └─ Invoke coder agent
+     └─ Pass: todo + research files
+        └─ Wait for result
+           └─ Receive: completion or escalation
+              └─ Move to: Delegating to Tester
+
+Delegating to Tester:
+  └─ Invoke tester agent
+     └─ Pass: what to verify
+        └─ Wait for result
+           └─ Receive: PASS/FAIL or escalation
+              ├─ If PASS → Mark todo complete
+              │            └─ Move to: Checking Todo (next one)
+              └─ If FAIL → Already handled by tester
+                           └─ Wait for human decision
+                              └─ Coder retries
+                                 └─ Loop back to: Delegating to Tester
+
+Complete:
+  └─ All todos ✓ marked
+     └─ Report to user: Project complete!
+
+CODER STATES:
+
+Reading:
+  └─ Understand todo
+     └─ Read research files (if any)
+        └─ Move to: Implementing
+
+Implementing:
+  └─ Write code
+     └─ Create files
+        └─ Move to: Testing
+
+Testing:
+  └─ Run locally
+     └─ IF works → Return completion
+        IF error → Move to: Escalating
+
+Escalating:
+  └─ Invoke stuck agent
+     └─ Describe problem
+        └─ Wait for human response
+           └─ Receive decision
+              └─ Move to: Implementing (retry based on human input)
+
+TESTER STATES:
+
+Verifying:
+  └─ Navigate to page
+     └─ Take screenshot
+        └─ Check elements
+           └─ Click buttons
+              └─ Move to: Reporting
+
+Reporting:
+  └─ IF visual correct → Return PASS
+     IF visual wrong → Move to: Escalating
+
+Escalating:
+  └─ Invoke stuck agent
+     └─ Show screenshot
+        └─ Ask human: "Fix or accept?"
+           └─ Wait for response
+              └─ Receive decision
+                 └─ Move to: Reporting
+
+STUCK STATES:
+
+Escalated:
+  └─ Receive problem + context
+     └─ Move to: Asking
+
+Asking:
+  └─ Use AskUserQuestion
+     └─ Present: problem + options
+        └─ Wait for human response
+           └─ Move to: Returning
+
+Returning:
+  └─ Send decision back to calling agent
+     └─ Calling agent retries/continues
+        └─ Stuck back to waiting
+
+================================================================================
+                    ERROR HANDLING FLOW
+================================================================================
+
+Traditional AI:
+  Error → Try fallback → Might work → Silent continuation
+  Problem: Uncertain results, hard to debug
+
+This System:
+  Error → Check instructions: "Invoke stuck!"
+       ↓
+  Invoke stuck(error_description)
+       ↓
+  Stuck: Uses AskUserQuestion
+       ↓
+  Stuck: "Error occurred. What should we do?"
+       ↓
+  Human: "Try option A"
+       ↓
+  Stuck: Returns human's decision to original agent
+       ↓
+  Original agent: Implements human's decision
+       ↓
+  Result: Certain, visible, intentional
+
+KEY POINT: Stuck agent blocks progress with AskUserQuestion
+           Nothing proceeds until human responds
+
+================================================================================
+                   WHAT MAKES CONTEXT ISOLATION WORK
+================================================================================
+
+Without Isolation (bad):
+  Context 1: Implement todo #1
+  Context 2: Implement todo #2
+  Context 3: Implement todo #3
+  
+  Problem: Context 3 remembers todos #1 and #2
+           Gets confused
+           Makes assumptions
+           Context pollution
+
+With Isolation (good):
+  Context A: Coder for todo #1
+             ├─ Knows: ONLY todo #1
+             ├─ Knows: ONLY research passed
+             └─ Forgets: todo #2, #3, others
+  
+  Context B: Coder for todo #2 (fresh)
+             ├─ Knows: ONLY todo #2
+             ├─ Knows: ONLY research passed
+             └─ Forgets: todo #1, #3, others
+  
+  Context C: Coder for todo #3 (fresh)
+             ├─ Knows: ONLY todo #3
+             ├─ Knows: ONLY research passed
+             └─ Forgets: todo #1, #2, others
+  
+  Benefit: No confusion, no assumptions
+
+How it's enforced:
+  1. Task tool spawns new model instance
+  2. Load agent .md file
+  3. Provide ONLY passed data
+  4. Run agent
+  5. Return result
+  6. Close context (no carryover)
+
+================================================================================
+                      CONFIGURATION MAP
+================================================================================
+
+File                          Purpose                           Enforces
+──────────────────────────────────────────────────────────────────────────────
+.claude/CLAUDE.md             Orchestrator role definition      YOU are orchestrator
+                              Workflow steps                    One-todo-at-a-time
+                              Agent specs                       Test everything
+                              Enforcement rules                 No fallbacks
+
+.claude/agents/coder.md       Coder role definition            Implement code
+                              When to invoke stuck             Escalate on error
+                              Success criteria                 Test locally
+
+.claude/agents/research.md    Research role definition         Fetch docs
+                              Jina AI usage                    Use curl + API
+                              Storage location                 Save to cache
+                              Escalation triggers              Can't find docs
+
+.claude/agents/tester.md      Tester role definition           Verify visually
+                              Playwright usage                 Take screenshots
+                              What to check                    Layout, interactions
+                              Failure handling                 Escalate on wrong
+
+.claude/agents/stuck.md       Stuck role definition            ONLY ask humans
+                              Question format                  Give options
+                              When invoked                     Any agent problem
+                              Decision return                  Back to calling agent
+
+.mcp.json                     Playwright MCP setup             Enable browser tools
+                              Tool availability                Tester gets Playwright
+                              Command to run                   npx @playwright/mcp
+
+.research-cache/              Persistent storage               Share research
+index.json                    Manifest of research             Track all sessions
+                              Session metadata                 ID, timestamp, summary
+
+.research-cache/              Documentation files              Passed to coder
+[tech]-[date].md              Markdown formatted               Human readable
+                              From Jina AI                     High quality
+
+================================================================================
+                    HUMAN DECISION TRIGGERS
+================================================================================
+
+Orchestrator asks human when:
+  ├─ Project direction unclear
+  ├─ Multiple tech choices available
+  └─ Strategic decision needed
+
+Coder asks human when:
+  ├─ Package install fails
+  ├─ File path doesn't exist
+  ├─ API call returns error
+  ├─ Command exits with code
+  ├─ Feature ambiguous
+  └─ ANYTHING doesn't work first try
+
+Tester asks human when:
+  ├─ Screenshot shows wrong layout
+  ├─ Element missing or misplaced
+  ├─ Interactive feature broken
+  ├─ Page won't load
+  ├─ Responsive design broken
+  └─ Visual output questionable
+
+Research asks human when:
+  ├─ Jina API returns error
+  ├─ Quota exceeded
+  ├─ Documentation not found
+  ├─ Multiple conflicting docs
+  ├─ Results seem outdated
+  └─ Search query ambiguous
+
+Always: No silent fallbacks, no assumptions, ask human
+
+================================================================================
+                    SUCCESS CHECKLIST
+================================================================================
+
+System is working correctly if:
+
+✓ Orchestrator maintains visible todo list
+✓ Research agent stores docs in .research-cache/
+✓ Research file path passed to coder
+✓ Coder creates working code
+✓ Tester takes screenshots for visual proof
+✓ Playwright screenshots show correct layout
+✓ Any error invokes stuck agent immediately
+✓ Stuck agent uses AskUserQuestion
+✓ Human can see all options before deciding
+✓ System blocks progress until human responds
+✓ Decision is relayed to calling agent
+✓ Agent retries based on human decision
+✓ Test is re-run after human decision
+✓ Each agent gets fresh context (no carryover)
+✓ No agent uses fallback or workaround
+✓ No hidden errors or silent failures
+✓ All todos tracked in TodoWrite
+✓ Completed todos marked visually
+✓ Final report shows all work completed
+
+================================================================================
