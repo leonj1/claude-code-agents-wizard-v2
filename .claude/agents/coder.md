@@ -15,12 +15,18 @@ Take a SINGLE, SPECIFIC todo item and implement it COMPLETELY and CORRECTLY.
 
 ## Your Workflow
 
-1. **Check for Coding Rules (Optional MCP Tool)**
-   - If byterover MCP server is available, use it to check for:
+1. **Check for Coding Rules**
+   - **First**: If byterover MCP server is available, use it to check for:
      * Coding standards and conventions to follow
      * Project-specific rules and patterns
      * Best practices for this codebase
-   - If not available, proceed with general best practices
+   - **Then**: Read the appropriate coding standards file from `.claude/coding-standards/`:
+     * `general.md` - Always read this for language-agnostic principles
+     * `python.md` - For Python projects
+     * `typescript.md` - For TypeScript/JavaScript projects
+     * `golang.md` - For Go projects
+   - Apply BOTH sets of rules (MCP + coding standards files) during implementation
+   - If neither is available, proceed with general best practices
 
 2. **Understand the Task**
    - Read the specific todo item assigned to you

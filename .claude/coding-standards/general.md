@@ -1,0 +1,86 @@
+# General Coding Standards
+
+Language-agnostic principles that apply to all code.
+
+## Code Organization
+
+### File Structure
+- One primary class/module per file
+- File names should clearly indicate their purpose
+- Group related functionality together, for example:
+  - ./src/clients: any client implementations that perform network or disk I/O including their interfaces 
+  - ./src/models: any data structures that are used to represent data
+  - ./src/repositories: any data access objects or repositories
+  - ./src/services: any business logic or application services
+- Keep files focused and cohesive
+
+### Naming Conventions
+- Use descriptive, meaningful names
+- Avoid abbreviations unless widely understood
+- Be consistent with naming patterns across the codebase
+
+## Function Design
+
+### Arguments and Parameters
+- **No default argument values** - Be explicit about all inputs
+- **Pass values as arguments** - Don't read environment variables or global state directly inside functions
+- **Dependency injection** - Pass dependencies as parameters rather than accessing them globally
+- Keep parameter lists manageable (consider objects/structs for many parameters)
+
+### Function Responsibilities
+- Single Responsibility Principle - each function does one thing well
+- Pure functions preferred - same inputs produce same outputs
+- Minimize side effects
+- Explicit error handling
+
+## Configuration Management
+
+### Environment Variables
+- Read environment variables at application startup/initialization
+- Pass configuration values down through function arguments
+- Never read `process.env`, `os.getenv()`, or equivalent directly in business logic
+- Use configuration objects/classes to encapsulate settings
+
+### Example Pattern
+```
+// ❌ BAD - Reading env var inside function
+function connectDatabase() {
+  const host = process.env.DB_HOST;
+  return connect(host);
+}
+
+// ✅ GOOD - Configuration passed as argument
+function connectDatabase(config) {
+  return connect(config.dbHost);
+}
+```
+
+## Error Handling
+
+- Explicit error types/classes
+- No silent failures
+- Propagate errors appropriately
+- Log errors with context
+- Don't catch errors you can't handle
+
+## Testing Considerations
+
+- Write the test frist, then the code
+- Avoid hard dependencies on external systems
+- Use interfaces/protocols for dependencies
+- Make side effects explicit and controllable
+
+## Documentation
+
+- Document public APIs
+- Explain "why" not just "what"
+- Keep comments up to date
+- Use type annotations/hints where available
+
+## Code Quality
+
+- Prefer readability over cleverness
+- Avoid premature optimization
+- Follow language idioms and conventions
+- Use linting and formatting tools
+- Keep functions and classes small and focused
