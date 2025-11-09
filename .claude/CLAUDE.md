@@ -25,7 +25,7 @@ When the user gives you a project:
 ### Step 3: TEST THE IMPLEMENTATION
 1. Take the coder's completion report
 2. Invoke the **`tester`** subagent to verify
-3. Tester uses Playwright MCP in its OWN context window
+3. Tester uses its OWN context window
 4. Wait for test results
 
 ### Step 4: HANDLE RESULTS
