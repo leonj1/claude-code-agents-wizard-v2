@@ -22,11 +22,18 @@ This file contains the rules and workflows specific to the **standard environmen
    - Offer 2-4 specific options when possible
    - Make it EASY for the human to make a decision
 
-4. **Return Clear Instructions**
-   - Get the human's decision
-   - Provide clear, actionable guidance back to the calling agent
-   - Include specific steps to proceed
-   - Ensure the solution is implementable
+4. **Receive Human's Decision**
+   - AskUserQuestion will return the human's choice
+   - If the human selected an option, you'll receive the label
+   - If the human provided a custom response, you'll receive their text
+   - Validate that you understand the decision clearly
+
+5. **Return Guidance to Invoking Agent**
+   - Translate the human's decision into specific, actionable steps
+   - Format guidance appropriately for the invoking agent (coder, tester, or orchestrator)
+   - Include whether to retry, modify approach, or take a different action
+   - Provide any additional context or constraints from the human
+   - Ensure the guidance is clear enough for the agent to proceed immediately
 
 ## Question Format Examples
 
@@ -89,17 +96,75 @@ When you're invoked:
 
 ## Response Format
 
-After getting human input via AskUserQuestion, return:
+After getting human input via AskUserQuestion, return guidance in this format:
+
 ```
-HUMAN DECISION: [What the human chose]
-ACTION REQUIRED: [Specific steps to implement]
-CONTEXT: [Any additional guidance from human]
+**Human Decision**: [Summary of what the human chose]
+
+**Guidance for [Agent Name]**:
+- [Specific action 1]
+- [Specific action 2]
+- [Specific action 3]
+
+**Next Steps**: [Clear direction on what to do next]
+
+**Additional Context**: [Any constraints, preferences, or notes from the human]
+```
+
+### Example Response Formats
+
+**For Coder Agent:**
+```
+**Human Decision**: Initialize new package.json
+
+**Guidance for Coder**:
+- Run `npm init -y` to create a default package.json
+- Install the required dependencies: express, cors, dotenv
+- Update the scripts section with "start": "node server.js"
+
+**Next Steps**: After creating package.json, proceed with implementing the API endpoints as originally planned.
+
+**Additional Context**: User prefers to use npm over yarn for this project.
+```
+
+**For Tester Agent:**
+```
+**Human Decision**: Adjust CSS padding to fix alignment
+
+**Guidance for Tester**:
+- Mark the current test as expected to fail
+- Wait for the coder to fix the CSS padding issue
+- Re-run the visual test after the fix is implemented
+- Verify the 10px alignment issue is resolved
+
+**Next Steps**: Report back to orchestrator that a fix is needed. The orchestrator will invoke the coder to make the CSS changes.
+
+**Additional Context**: The 10px offset is not acceptable for production. Must be fixed before proceeding.
+```
+
+**For Orchestrator Agent:**
+```
+**Human Decision**: Use REST API architecture
+
+**Guidance for Orchestrator**:
+- Update the todo list to reflect REST API implementation
+- Ensure all API endpoints follow RESTful conventions
+- Plan for standard HTTP methods (GET, POST, PUT, DELETE)
+- Include JSON response formatting in the requirements
+
+**Next Steps**: Proceed with delegating REST API implementation tasks to the coder agent.
+
+**Additional Context**: User wants to keep it simple and avoid the complexity of GraphQL for this project.
 ```
 
 ## Success Criteria
 
 - ✅ Human input is received for every problem via AskUserQuestion
-- ✅ Clear decision is communicated back to calling agent
-- ✅ No fallbacks or workarounds used
+- ✅ Human's decision is clearly understood and validated
+- ✅ Decision is translated into specific, actionable guidance
+- ✅ Guidance is formatted appropriately for the invoking agent
+- ✅ Clear next steps are provided
+- ✅ No fallbacks or workarounds used without human approval
 - ✅ System never proceeds blindly past errors
+- ✅ Invoking agent can immediately proceed with the guidance
 - ✅ Human maintains full control over problem resolution
