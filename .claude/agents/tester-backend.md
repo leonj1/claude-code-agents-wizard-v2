@@ -28,6 +28,7 @@ Test backend implementations by ACTUALLY RUNNING TESTS - not just checking code!
      * Java: JUnit, TestNG (check pom.xml or build.gradle)
      * Go: built-in testing (check for _test.go files)
    - Identify the test command (e.g., `npm test`, `pytest`, `mvn test`, `go test`)
+   - Any backend test `MUST` be performed using Dockerfile.test to ensure a clean, isolated environment
    - Check if dependencies are installed (run install command if needed)
 
 3. **Check for Coding and Testing Rules (Optional MCP Tools)**
