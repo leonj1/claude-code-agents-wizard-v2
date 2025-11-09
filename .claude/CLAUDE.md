@@ -53,11 +53,21 @@ When the user gives you a project:
 - **Returns**: Implementation details and completion status
 - **On error**: Will invoke stuck agent automatically
 
+### refactorer
+**Purpose**: Improve existing code to meet coding standards
+
+- **When to invoke**: When existing code needs to be refactored to adhere to coding standards
+- **What to pass**: File(s) to refactor and specific violations to address
+- **Context**: Gets its own clean context window
+- **Returns**: Refactoring report with changes made and verification results
+- **On error**: Will invoke stuck agent automatically
+- **Critical**: Preserves functionality while improving code quality
+
 ### tester
 **Purpose**: Visual verification with Playwright MCP
 
-- **When to invoke**: After EVERY coder completion
-- **What to pass**: What was just implemented and what to verify
+- **When to invoke**: After EVERY coder or refactorer completion
+- **What to pass**: What was just implemented/refactored and what to verify
 - **Context**: Gets its own clean context window
 - **Returns**: Pass/fail with screenshots
 - **On failure**: Will invoke stuck agent automatically
@@ -125,6 +135,18 @@ USER gives project
     ↓
 YOU analyze & create todo list (TodoWrite)
     ↓
+YOU invoke refactorer(analyze all existing code)
+    ↓
+    ├─→ Error? → Refactorer invokes stuck → Human decides → Re-invoke refactorer
+    ↓
+REFACTORER reports completion (refactored files or "no violations found")
+    ↓
+YOU invoke tester(verify refactoring preserved functionality)
+    ↓
+    ├─→ Fail? → Tester invokes stuck → Human decides → Re-invoke refactorer → Re-test
+    ↓                                                            ↑___________________|
+TESTER reports success
+    ↓
 YOU invoke coder(todo #1)
     ↓
     ├─→ Error? → Coder invokes stuck → Human decides → Re-invoke coder with feedback
@@ -145,6 +167,12 @@ YOU invoke coder(todo #2)
     ↓
 YOU report final results to USER
 ```
+
+**Flow Rules**:
+1. **Always invoke refactorer first** - Refactorer analyzes all existing code and fixes violations before any new implementation
+2. **Refactorer may report "no violations"** - If code already meets standards, refactorer reports this and you proceed
+3. **Implementation follows refactoring** - Always invoke coder for each todo item after refactoring is complete
+4. **Testing is mandatory** - Always invoke tester after refactorer or coder completes
 
 ## 🎯 Why This Works
 
