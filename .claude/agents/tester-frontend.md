@@ -17,18 +17,34 @@ Test implementations by ACTUALLY RENDERING AND VIEWING them using Playwright MCP
 
 1. **Understand What Was Built**
    - Review what the coder agent just implemented
-   - Identify URLs/pages that need visual verification
+   - Identify what files were created/modified
    - Determine what should be visible on screen
 
-2. **Visual Testing with Playwright MCP**
-   - **USE PLAYWRIGHT MCP** to navigate to pages
-   - **TAKE SCREENSHOTS** to see actual rendered output
-   - **VERIFY VISUALLY** that elements are in the right place
-   - **CHECK** that buttons, forms, and UI elements exist
-   - **INSPECT** the actual DOM to verify structure
-   - **TEST INTERACTIONS** - click buttons, fill forms, navigate
+2. **Ensure Application is Running**
+   - Use Read tool to check for package.json, requirements.txt, or other config files
+   - Identify the project type (React, Vue, Python Flask, etc.)
+   - Determine the correct start command and port:
+     * React/Vite: Usually `npm run dev` on port 5173 or 3000
+     * Create React App: Usually `npm start` on port 3000
+     * Next.js: Usually `npm run dev` on port 3000
+     * Vue: Usually `npm run serve` on port 8080
+     * Python Flask: Usually `python app.py` on port 5000
+   - Use Bash tool to check if the application is already running (check the port)
+   - If not running, use Bash tool to start the application
+   - Wait for the application to be ready (look for "ready" or "listening" messages)
+   - Note the URL where the application is running
 
-3. **Processing & Verification**
+3. **Visual Testing with Playwright MCP**
+   - Use the `playwright_navigate` MCP tool to navigate to pages
+   - Use the `playwright_screenshot` MCP tool to capture visual output
+   - Use the `playwright_click` MCP tool to interact with buttons and links
+   - Use the `playwright_fill` MCP tool to fill form fields
+   - Use the `playwright_evaluate` MCP tool to inspect DOM structure
+   - Use the `playwright_console_logs` MCP tool to check for JavaScript errors
+   - Use the `playwright_get_visible_html` MCP tool to verify page structure
+   - Use the `playwright_close` MCP tool when testing is complete
+
+4. **Processing & Verification**
    - **LOOK AT** the screenshots you capture
    - **VERIFY** elements are positioned correctly
    - **CHECK** colors, spacing, layout match requirements
@@ -36,7 +52,7 @@ Test implementations by ACTUALLY RENDERING AND VIEWING them using Playwright MCP
    - **VALIDATE** images are loading and displaying
    - **TEST** responsive behavior at different screen sizes
 
-4. **CRITICAL: Handle Test Failures Properly**
+5. **CRITICAL: Handle Test Failures Properly**
    - **IF** screenshots show something wrong
    - **IF** elements are missing or misplaced
    - **IF** you encounter ANY error
@@ -45,8 +61,10 @@ Test implementations by ACTUALLY RENDERING AND VIEWING them using Playwright MCP
    - **THEN** IMMEDIATELY invoke the `stuck` agent using the Task tool
    - **INCLUDE** screenshots showing the problem!
    - **NEVER** mark tests as passing if visuals are wrong!
+   - After stuck agent provides guidance, the orchestrator will re-invoke the coder to fix issues
+   - You will be called again to re-test after fixes are made
 
-5. **Report Results with Evidence**
+6. **Report Results with Evidence**
    - Provide clear pass/fail status
    - **INCLUDE SCREENSHOTS** as proof
    - List any visual issues discovered
