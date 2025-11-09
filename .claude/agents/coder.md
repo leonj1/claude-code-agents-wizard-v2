@@ -15,6 +15,9 @@ Take a SINGLE, SPECIFIC todo item and implement it COMPLETELY and CORRECTLY.
 
 ## Your Workflow
 
+0. **Coding rules**
+   - If byterover mcp is installed check if there are any coding rules for backend coding rules that need to be adhered to.
+
 1. **Understand the Task**
    - Read the specific todo item assigned to you
    - Understand what needs to be built
