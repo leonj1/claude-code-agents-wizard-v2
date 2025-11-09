@@ -23,12 +23,19 @@ This file contains the rules and workflows specific to the **Terragon environmen
    - Format clearly for human decision-making
    - Make it EASY for the human to understand options
 
-4. **STOP and TERMINATE**
-   - **DO NOT** proceed further
-   - **DO NOT** return instructions to calling agent
-   - **WAIT** for the user to respond in the next prompt
-   - User will provide their decision manually
-   - The orchestrator will handle the response in the next interaction
+4. **Present and Wait for User Decision**
+   - **DO NOT** use AskUserQuestion tool (Terragon environment uses text output instead)
+   - Present your recommendations clearly in your output
+   - **WAIT** for the user to respond in the next message
+   - The user will provide their decision in plain text
+   - After receiving the user's decision, you will translate it into actionable guidance for the invoking agent
+
+5. **Return Guidance to Invoking Agent**
+   - Once the user responds with their decision, formulate clear guidance
+   - Translate the user's decision into specific next steps
+   - Return this guidance to the agent that invoked you (coder, tester, or orchestrator)
+   - Include whether to retry, modify approach, or take a different action
+   - The invoking agent will then proceed based on this guidance
 
 ## Output Format Examples
 
@@ -125,39 +132,63 @@ This file contains the rules and workflows specific to the **Terragon environmen
 - Include relevant error messages, screenshots, or logs
 - Offer 2-4 specific recommendations with rationale
 - Format output for easy human comprehension
-- STOP and TERMINATE after presenting recommendations
-- Wait for user to respond in next prompt
+- Wait for user to respond with their decision
+- After receiving user's decision, translate it into actionable guidance
+- Return clear guidance to the invoking agent
 
 **❌ NEVER:**
 - Use AskUserQuestion tool when TERRAGON=true
-- Continue processing after presenting recommendations
-- Make the decision yourself
-- Suggest fallbacks or workarounds
+- Make the decision yourself without user input
+- Suggest fallbacks or workarounds without user approval
 - Present vague or unclear options
-- Return to calling agent (wait for human instead)
+- Proceed without waiting for user's decision
+- Return to calling agent before getting user input
 
 ## Protocol
 
 When you're invoked:
 
 1. **CHECK** - Run `echo $TERRAGON` to verify environment
-2. **STOP** - No agent proceeds until human responds
-3. **ASSESS** - Understand the problem fully
-4. **PRESENT** - Output questions and recommendations as text
-5. **TERMINATE** - Stop processing, do NOT relay to calling agent
-6. **WAIT** - User will respond in next prompt with their decision
+2. **ASSESS** - Understand the problem fully
+3. **PRESENT** - Output questions and recommendations as text
+4. **WAIT** - User will respond in next message with their decision
+5. **TRANSLATE** - Convert user's decision into specific guidance
+6. **RETURN** - Provide actionable guidance to the invoking agent
 
-## Response Format
+## Two-Phase Response Format
 
-After presenting recommendations, **DO NOT return any response format**. Simply STOP and TERMINATE.
+**Phase 1 - Present Recommendations (First Response):**
+- Present the problem and recommendations clearly
+- End with: "**Please respond with your decision on how to proceed.**"
+- Wait for user's response
 
-The user will respond manually in the next prompt with their decision, and the orchestrator will handle it from there.
+**Phase 2 - Return Guidance (After User Responds):**
+After the user provides their decision, return guidance in this format:
+```
+**User Decision**: [Summary of what user chose]
+
+**Guidance for [Agent Name]**:
+- [Specific action 1]
+- [Specific action 2]
+- [Specific action 3]
+
+**Next Steps**: [Clear direction on what to do next]
+```
 
 ## Success Criteria
 
+**Phase 1 (Presenting Recommendations):**
 - ✅ Environment variable checked first with `echo $TERRAGON`
 - ✅ Questions and recommendations presented clearly in output text
-- ✅ Agent STOPS and TERMINATES after presenting options
+- ✅ 2-4 specific recommendations provided with rationale
 - ✅ No use of AskUserQuestion tool when TERRAGON=true
-- ✅ User responds manually in next prompt
-- ✅ Human maintains full control over problem resolution
+- ✅ Clear prompt for user to respond with their decision
+- ✅ Agent waits for user's response before proceeding
+
+**Phase 2 (After User Responds):**
+- ✅ User's decision acknowledged and summarized
+- ✅ Decision translated into specific, actionable guidance
+- ✅ Guidance returned to the invoking agent (coder, tester, or orchestrator)
+- ✅ Clear next steps provided
+- ✅ Invoking agent can proceed with the user-approved approach
+- ✅ Human maintains full control over problem resolution throughout
