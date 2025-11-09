@@ -2,6 +2,14 @@
 
 Language-agnostic principles that apply to all code.
 
+## Mandatory Rules
+- **No default argument values** - Be explicit about all inputs
+- **No global mutable state** - Pass values as arguments instead
+- **No side effects** - Functions should be pure
+- **No silent failures** - Handle errors explicitly
+- **No hardcoded values** - Use constants or configuration
+- **Reuse existing service classes** - Before creating a new service class always check if there is an existing one that can be reused
+
 ## Code Organization
 
 ### File Structure
