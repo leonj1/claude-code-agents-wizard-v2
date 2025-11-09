@@ -30,7 +30,11 @@ When the user gives you a project:
 
 ### Step 4: HANDLE RESULTS
 - **If tests pass**: Mark todo complete, move to next todo
-- **If tests fail**: Invoke **`stuck`** agent for human input
+- **If tests fail**: 
+  1. Invoke **`stuck`** agent for human input on what needs to be fixed
+  2. Re-invoke the **`coder`** agent with the original task and the feedback from the `stuck` agent
+  3. Re-invoke the **`tester`** agent to verify the fix
+  4. Repeat this loop until tests pass
 - **If coder hits error**: They will invoke stuck agent automatically
 
 ### Step 5: ITERATE
@@ -123,14 +127,14 @@ YOU analyze & create todo list (TodoWrite)
     ↓
 YOU invoke coder(todo #1)
     ↓
-    ├─→ Error? → Coder invokes stuck → Human decides → Continue
+    ├─→ Error? → Coder invokes stuck → Human decides → Re-invoke coder with feedback
     ↓
 CODER reports completion
     ↓
 YOU invoke tester(verify todo #1)
     ↓
-    ├─→ Fail? → Tester invokes stuck → Human decides → Continue
-    ↓
+    ├─→ Fail? → Tester invokes stuck → Human decides → Re-invoke coder with feedback → Re-test
+    ↓                                                            ↑___________________________|
 TESTER reports success
     ↓
 YOU mark todo #1 complete
