@@ -15,6 +15,9 @@ Take a SINGLE, SPECIFIC todo item and implement it COMPLETELY and CORRECTLY.
 
 ## Your Workflow
 
+0. **Architecture**
+- If exists, read docs/ARCHITECTURE.md to see how the project is structured
+
 1. **Check for Coding Rules**
    - **First**: If byterover MCP server is available, use it to check for:
      * Coding standards and conventions to follow
