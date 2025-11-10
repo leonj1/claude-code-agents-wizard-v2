@@ -14,6 +14,18 @@ SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
 CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd')
 SUBAGENT_NAME=$(echo "$HOOK_INPUT" | jq -r '.subagent_name // empty')
 
+# Validate session_id format (alphanumeric, hyphen, underscore only)
+if ! [[ "$SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "❌ Invalid session_id format" >&2
+  exit 1
+fi
+
+# Validate CWD is not empty
+if [ -z "$CWD" ]; then
+  echo "❌ CWD is empty" >&2
+  exit 1
+fi
+
 # Log hook execution
 echo "🧪 Post-Standards Hook: Triggering testing" >&2
 echo "   Session: $SESSION_ID" >&2
