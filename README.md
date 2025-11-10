@@ -65,12 +65,12 @@ You: "Build a todo app with React and TypeScript"
 
 Claude will automatically:
 1. Create a detailed todo list using TodoWrite
-2. Delegate the first todo to the **coder** subagent
+2. Delegate the first to-do to the **coder** subagent
 3. The coder implements in its own clean context window
 4. The **coding-standards-checker** validates code quality
 5. Delegate verification to the **tester** subagent (Playwright screenshots)
 6. If ANY problem occurs, the **stuck** subagent asks you what to do
-7. Mark todo complete and move to the next one
+7. Mark to-do complete and move to the next one
 8. Repeat until project complete
 
 **Optional**: Use the `/refactor` slash command to improve existing code quality:
@@ -139,7 +139,7 @@ Repeat until all todos done ✅
 - **Never uses fallbacks** - invokes stuck agent immediately
 - Reports completion back to Claude
 
-**When it's used**: Claude delegates each coding todo to this subagent
+**When it's used**: Claude delegates each coding to-do to this subagent
 
 ### Coding Standards Checker Subagent
 **Fresh Context Per Review**
