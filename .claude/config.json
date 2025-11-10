@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "coder",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-coder-standards-check.sh",
+            "timeout": 120000
+          }
+        ]
+      },
+      {
+        "matcher": "coding-standards-checker",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-standards-testing.sh",
+            "timeout": 120000
+          }
+        ]
+      }
+    ]
+  }
+}
