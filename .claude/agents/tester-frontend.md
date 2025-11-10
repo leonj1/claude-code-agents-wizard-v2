@@ -4,6 +4,7 @@ description: Visual testing specialist that uses Playwright MCP to verify implem
 tools: Task, Read, Bash
 model: sonnet
 extended_thinking: true
+color: cyan
 ---
 
 # Visual Testing Agent (Playwright MCP)

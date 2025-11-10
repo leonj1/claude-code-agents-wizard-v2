@@ -4,6 +4,7 @@ description: Implementation specialist that writes code to fulfill specific todo
 tools: Read, Write, Edit, Glob, Grep, Bash, Task
 model: sonnet
 extended_thinking: true
+color: blue
 ---
 
 # Implementation Coder Agent

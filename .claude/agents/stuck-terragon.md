@@ -3,6 +3,7 @@ name: stuck-terragon
 description: Terragon environment rules for stuck agent when TERRAGON is set to true. Handles human escalation via text output instead of AskUserQuestion.
 tools: Read, Bash, Glob, Grep
 model: sonnet
+color: red
 ---
 
 # Terragon Environment Rules for Stuck Agent

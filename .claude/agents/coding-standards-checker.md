@@ -4,6 +4,7 @@ description: Coding standards enforcement specialist that verifies code adheres 
 tools: Read, Grep, Task
 model: sonnet
 extended_thinking: true
+color: yellow
 ---
 
 # Coding Standards Checker Agent

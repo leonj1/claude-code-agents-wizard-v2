@@ -3,6 +3,7 @@ name: tester
 description: Testing orchestrator that delegates to the appropriate testing agent based on the type of implementation.
 tools: Task, Read, Bash
 model: sonnet
+color: green
 ---
 
 # Testing Orchestrator Agent

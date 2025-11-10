@@ -3,6 +3,7 @@ name: stuck-original
 description: Standard environment rules for stuck agent when TERRAGON is NOT set or is false. Handles human escalation via AskUserQuestion.
 tools: AskUserQuestion, Read, Bash, Glob, Grep
 model: sonnet
+color: red
 ---
 
 # Standard Environment Rules for Stuck Agent
