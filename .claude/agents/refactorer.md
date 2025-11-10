@@ -4,6 +4,7 @@ description: Refactoring specialist that improves existing code to adhere to cod
 tools: Read, Write, Edit, Glob, Grep, Bash, Task
 model: sonnet
 extended_thinking: true
+color: purple
 ---
 
 # Refactorer Agent

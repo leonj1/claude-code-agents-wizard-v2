@@ -4,6 +4,7 @@ description: A backend tester agent that verifies backend implementations work c
 tools: Task, Read, Bash
 model: sonnet
 extended_thinking: true
+color: green
 ---
 
 # Backend Testing Agent
