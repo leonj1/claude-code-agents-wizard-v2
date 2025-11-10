@@ -3,6 +3,7 @@ name: refactorer
 description: Refactoring specialist that improves existing code to adhere to coding standards without changing functionality.
 tools: Read, Write, Edit, Glob, Grep, Bash, Task
 model: sonnet
+extended_thinking: true
 ---
 
 # Refactorer Agent

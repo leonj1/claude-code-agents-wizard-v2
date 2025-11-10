@@ -60,6 +60,42 @@ def create_user(name, email, role):
     pass
 ```
 
+**Exception: FastAPI Optional Form Parameters**
+
+FastAPI 0.115.5+ requires the `= None` syntax for optional form parameters. This is the ONLY acceptable use of default parameter values:
+
+```python
+from fastapi import FastAPI, Form
+from typing import Optional
+
+app = FastAPI()
+
+# ✅ ALLOWED - FastAPI optional form parameters
+@app.post("/users")
+async def create_user(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: Optional[str] = Form(None)  # This is acceptable for FastAPI
+):
+    # phone is optional and defaults to None
+    pass
+
+# ❌ STILL BAD - Regular function defaults
+def process_user(name, email, phone=None):  # Not allowed
+    pass
+
+# ✅ GOOD - Pass optional values explicitly
+def process_user(name, email, phone):
+    # If phone can be None, use Optional[str] type hint
+    pass
+```
+
+**Key Points:**
+- The `= None` exception applies ONLY to FastAPI `Form()` parameters
+- Regular functions must still have no default values
+- Use `Optional[Type]` type hints to indicate nullable parameters
+- Service layer functions should never use defaults, even for optional values
+
 ### No Environment Variable Access
 ```python
 # ❌ BAD - Reading env vars in function
