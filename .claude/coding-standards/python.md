@@ -209,6 +209,160 @@ def calculate_total(items, tax_rate):
     pass
 ```
 
+## Controller Design (Web Frameworks)
+
+### Route Handlers Must Not Contain Business Logic
+
+Route handlers (controllers) should be thin orchestration layers that only:
+1. Call service layer methods
+2. Return the result
+
+All business logic, validation, and data processing must be in the service layer.
+
+#### Complete Example
+
+```python
+# services.py
+class UserNotFoundError(Exception):
+    """Custom exception raised when a user isn't found in the database."""
+    pass
+
+class UserService:
+    """
+    Manages user data. This is our "service" layer.
+    It has no knowledge of HTTP, FastAPI, or web requests.
+    """
+    def __init__(self):
+        # A mock database
+        self._users = {
+            1: {"id": 1, "name": "Alice", "email": "alice@example.com"},
+            2: {"id": 2, "name": "Bob", "email": "bob@example.com"},
+        }
+
+    def get_user_by_id(self, user_id: int) -> dict:
+        """
+        Fetches a user by their ID.
+        
+        Returns:
+            A dictionary with user data.
+        
+        Raises:
+            UserNotFoundError: If the user ID does not exist.
+        """
+        user = self._users.get(user_id)
+        
+        if not user:
+            # The service layer's only job is to state what went wrong
+            # at a business-logic level.
+            raise UserNotFoundError(f"User with ID {user_id} not found.")
+            
+        return user
+
+
+# decorators.py
+import functools
+import asyncio
+from starlette.responses import JSONResponse
+from services import UserNotFoundError  # Import our custom exception
+
+class HandleApiErrors:
+    """
+    A class-based decorator to standardize API *error* responses.
+    
+    It wraps a controller function and automatically catches 
+    service-layer exceptions, translating them into the correct
+    HTTP JSON error response.
+    """
+    
+    def __call__(self, fn):
+        """
+        This is what gets called when the decorator wraps the function.
+        'fn' is the controller function itself (e.g., 'get_user_controller').
+        """
+        
+        # Check if the function we're wrapping is async or not
+        if asyncio.iscoroutinefunction(fn):
+            # It's an async function, so our wrapper must be async
+            @functools.wraps(fn)
+            async def async_wrapper(*args, **kwargs):
+                try:
+                    # --- SUCCESS ---
+                    # Call the original async controller function
+                    return await fn(*args, **kwargs)
+
+                # --- FAILURE (Specific) ---
+                except UserNotFoundError as e:
+                    response = {"error": str(e)}
+                    return JSONResponse(status_code=404, content=response)
+
+                # --- FAILURE (Generic) ---
+                except Exception as e:
+                    print(f"Unhandled exception in {fn.__name__}: {e}")
+                    response = {"error": "An internal server error occurred."}
+                    return JSONResponse(status_code=500, content=response)
+            
+            return async_wrapper
+        
+        else:
+            # It's a regular sync function
+            @functools.wraps(fn)
+            def sync_wrapper(*args, **kwargs):
+                try:
+                    # --- SUCCESS ---
+                    # Call the original sync controller function
+                    return fn(*args, **kwargs)
+
+                # --- FAILURE (Specific) ---
+                except UserNotFoundError as e:
+                    response = {"error": str(e)}
+                    return JSONResponse(status_code=404, content=response)
+
+                # --- FAILURE (Generic) ---
+                except Exception as e:
+                    print(f"Unhandled exception in {fn.__name__}: {e}")
+                    response = {"error": "An internal server error occurred."}
+                    return JSONResponse(status_code=500, content=response)
+
+            return sync_wrapper
+
+
+# app.py
+from fastapi import FastAPI
+from services import UserService
+from decorators import HandleApiErrors
+
+# --- Application Setup ---
+app = FastAPI()
+user_service = UserService()  # Instantiate our service
+
+# --- Controller (Routes) ---
+
+@app.get("/users/{user_id}", status_code=200)
+@HandleApiErrors()  # <-- The decorator is applied here
+async def get_user_controller(user_id: int):
+    """
+    This is the "clean" controller (endpoint).
+    
+    Its only responsibility is to orchestrate the call to the
+    service layer. It just returns the raw data.
+    
+    - Success (200) is handled by the @app.get decorator.
+    - Errors (404, 500) are handled by the @HandleApiErrors decorator.
+    """
+    # 1. Call the service directly
+    # 2. Return the data
+    # The decorator will handle exceptions, and FastAPI
+    # will handle the successful serialization.
+    return user_service.get_user_by_id(user_id)
+```
+
+### Key Principles
+
+- **Controllers are thin**: Only orchestrate calls to services
+- **Services contain logic**: All business logic, validation, and data access
+- **Decorators handle errors**: Convert service exceptions to HTTP responses
+- **Clean separation**: Controllers know nothing about business rules
+
 ## Imports
 
 ### Organization
