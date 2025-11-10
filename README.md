@@ -7,7 +7,6 @@ A simple yet powerful orchestration system for Claude Code that uses specialized
 This is a **custom Claude Code orchestration system** that transforms how you build software projects. Claude Code itself acts as the orchestrator with its 200k context window, managing the big picture while delegating individual tasks to specialized subagents:
 
 - **🧠 Claude (You)** - The orchestrator with 200k context managing todos and the big picture
-- **🔧 Refactorer Subagent** - Improves existing code to meet coding standards in its own clean context
 - **✍️ Coder Subagent** - Implements one todo at a time in its own clean context
 - **✅ Coding Standards Checker Subagent** - Quality gatekeeper that enforces coding standards before testing
 - **👁️ Tester Subagent** - Verifies implementations using Playwright in its own context
@@ -66,13 +65,20 @@ You: "Build a todo app with React and TypeScript"
 
 Claude will automatically:
 1. Create a detailed todo list using TodoWrite
-2. Invoke the **refactorer** subagent to analyze and improve existing code
-3. Delegate the first todo to the **coder** subagent
-4. The coder implements in its own clean context window
+2. Delegate the first to-do to the **coder** subagent
+3. The coder implements in its own clean context window
+4. The **coding-standards-checker** validates code quality
 5. Delegate verification to the **tester** subagent (Playwright screenshots)
 6. If ANY problem occurs, the **stuck** subagent asks you what to do
-7. Mark todo complete and move to the next one
+7. Mark to-do complete and move to the next one
 8. Repeat until project complete
+
+**Optional**: Use the `/refactor` slash command to improve existing code quality:
+```bash
+/refactor src/utils.py          # Refactor a specific file
+/refactor src/services/         # Refactor a directory
+/refactor                       # Analyze entire project
+```
 
 ### The Workflow
 
@@ -80,18 +86,6 @@ Claude will automatically:
 USER: "Build X"
     ↓
 CLAUDE: Creates detailed todos with TodoWrite
-    ↓
-CLAUDE: Invokes refactorer subagent (analyze existing code)
-    ↓
-REFACTORER (own context): Analyzes code, fixes violations
-    ↓
-    ├─→ Problem? → Invokes STUCK → You decide → Continue
-    ↓
-REFACTORER: Reports completion (refactored or "no violations")
-    ↓
-CLAUDE: Invokes tester (verify functionality preserved)
-    ↓
-TESTER: Reports success
     ↓
 CLAUDE: Invokes coder subagent for todo #1
     ↓
@@ -135,19 +129,6 @@ Repeat until all todos done ✅
 
 **How it works**: Claude IS the orchestrator - it uses its 200k context to manage everything
 
-### Refactorer Subagent
-**Fresh Context Per Refactoring**
-
-- Gets invoked to analyze and improve existing code
-- Works in its own clean context window
-- Reads coding standards from `.claude/coding-standards/`
-- Fixes violations while preserving functionality
-- **Never changes behavior** - only improves code quality
-- **Never uses fallbacks** - invokes stuck agent immediately
-- Reports completion back to Claude
-
-**When it's used**: Claude invokes this FIRST before any new implementation to ensure code quality
-
 ### Coder Subagent
 **Fresh Context Per Task**
 
@@ -158,7 +139,7 @@ Repeat until all todos done ✅
 - **Never uses fallbacks** - invokes stuck agent immediately
 - Reports completion back to Claude
 
-**When it's used**: Claude delegates each coding todo to this subagent (after refactoring)
+**When it's used**: Claude delegates each coding to-do to this subagent
 
 ### Coding Standards Checker Subagent
 **Fresh Context Per Review**
@@ -297,6 +278,8 @@ Coder: Reports completion to Claude
 │   │   ├── coding-standards-checker.md   # Standards checker subagent definition
 │   │   ├── tester.md                     # Tester subagent definition
 │   │   └── stuck.md                      # Stuck subagent definition
+│   ├── commands/
+│   │   └── refactor.md        # /refactor slash command (on-demand refactoring)
 │   └── coding-standards/
 │       ├── README.md         # Coding standards overview
 │       ├── general.md        # Language-agnostic principles
@@ -343,11 +326,11 @@ This system leverages Claude Code's [subagent system](https://docs.claude.com/en
 
 The magic happens because:
 - **Claude (200k context)** = Maintains big picture, manages todos
-- **Refactorer (fresh context)** = Improves existing code quality before new work
 - **Coder (fresh context)** = Implements one task at a time following standards
 - **Coding Standards Checker (fresh context)** = Enforces standards compliance before testing
 - **Tester (fresh context)** = Verifies one implementation at a time
 - **Stuck (fresh context)** = Handles one problem at a time with human input
+- **Refactorer (on-demand via `/refactor`)** = Improves existing code quality when needed
 - **Coding standards** = Shared rules in `.claude/coding-standards/` that refactorer, coder, and standards checker follow
 - **Each subagent** has specific tools and hardwired escalation rules
 
@@ -362,6 +345,7 @@ The magic happens because:
 ## 🔥 Pro Tips
 
 - Use `/agents` command to see all available subagents
+- Use `/refactor` command to improve existing code quality on-demand
 - Claude maintains the todo list in its 200k context - check anytime
 - Screenshots from tester are saved and can be reviewed
 - Each subagent has specific tools - check their `.md` files

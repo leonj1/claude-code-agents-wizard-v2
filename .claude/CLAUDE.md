@@ -61,16 +61,6 @@ When the user gives you a project:
 - **Returns**: Implementation details and completion status
 - **On error**: Will invoke stuck agent automatically
 
-### refactorer
-**Purpose**: Improve existing code to meet coding standards
-
-- **When to invoke**: When existing code needs to be refactored to adhere to coding standards
-- **What to pass**: File(s) to refactor and specific violations to address
-- **Context**: Gets its own clean context window
-- **Returns**: Refactoring report with changes made and verification results
-- **On error**: Will invoke stuck agent automatically
-- **Critical**: Preserves functionality while improving code quality
-
 ### coding-standards-checker
 **Purpose**: Code quality verification
 
@@ -162,18 +152,6 @@ USER gives project
     ↓
 YOU analyze & create todo list (TodoWrite)
     ↓
-YOU invoke refactorer(analyze all existing code)
-    ↓
-    ├─→ Error? → Refactorer invokes stuck → Human decides → Re-invoke refactorer
-    ↓
-REFACTORER reports completion (refactored files or "no violations found")
-    ↓
-YOU invoke tester(verify refactoring preserved functionality)
-    ↓
-    ├─→ Fail? → Tester invokes stuck → Human decides → Re-invoke refactorer → Re-test
-    ↓                                                            ↑___________________|
-TESTER reports success
-    ↓
 YOU invoke coder(todo #1)
     ↓
     ├─→ Error? → Coder invokes stuck → Human decides → Re-invoke coder with feedback
@@ -210,12 +188,10 @@ YOU report final results to USER
 ```
 
 **Flow Rules**:
-1. **Always invoke refactorer first** - Refactorer analyzes all existing code and fixes violations before any new implementation
-2. **Refactorer may report "no violations"** - If code already meets standards, refactorer reports this and you proceed
-3. **Implementation uses coder only** - You ONLY invoke coder for each todo item initially
-4. **Hooks signal quality gates** - SubagentStop hooks emit signals when to invoke standards-checker and tester
-5. **You respond to signals** - When you see a hook signal, you manually invoke the next agent in the chain
-6. **Signal-based automation** - Hooks don't directly invoke agents; they signal the orchestrator to do so
+1. **Implementation uses coder only** - You ONLY invoke coder for each todo item initially
+2. **Hooks signal quality gates** - SubagentStop hooks emit signals when to invoke standards-checker and tester
+3. **You respond to signals** - When you see a hook signal, you manually invoke the next agent in the chain
+4. **Signal-based automation** - Hooks don't directly invoke agents; they signal the orchestrator to do so
 
 ## 🎯 Why This Works
 
