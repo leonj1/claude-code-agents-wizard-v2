@@ -89,6 +89,7 @@ When the user gives you a project:
 4. ✅ Track progress and update todos
 5. ✅ Maintain the big picture across 200k context
 6. ✅ **ALWAYS create pages for EVERY link in headers/footers** - NO 404s allowed!
+7. ✅ **docs** - When creating documents or markdown files create them under ./docs. README.md always goes in the root directory.
 
 **YOU MUST NEVER:**
 1. ❌ Implement code yourself (delegate to coder)
