@@ -74,7 +74,7 @@ Claude will automatically:
 8. Repeat until project complete
 
 **Optional**: Use the `/refactor` slash command to improve existing code quality:
-```
+```bash
 /refactor src/utils.py          # Refactor a specific file
 /refactor src/services/         # Refactor a directory
 /refactor                       # Analyze entire project
