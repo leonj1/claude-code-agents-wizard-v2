@@ -12,6 +12,7 @@ These standards ensure consistency, maintainability, and quality across the code
 - `python.md` - Python-specific standards
 - `typescript.md` - TypeScript-specific standards
 - `golang.md` - Go-specific standards
+- `dotnetcore.md` - .NET Core/C#-specific standards
 
 ## Usage
 
