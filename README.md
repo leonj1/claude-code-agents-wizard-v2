@@ -9,6 +9,7 @@ This is a **custom Claude Code orchestration system** that transforms how you bu
 - **🧠 Claude (You)** - The orchestrator with 200k context managing todos and the big picture
 - **🔧 Refactorer Subagent** - Improves existing code to meet coding standards in its own clean context
 - **✍️ Coder Subagent** - Implements one todo at a time in its own clean context
+- **✅ Coding Standards Checker Subagent** - Quality gatekeeper that enforces coding standards before testing
 - **👁️ Tester Subagent** - Verifies implementations using Playwright in its own context
 - **🆘 Stuck Subagent** - Human escalation point when ANY problem occurs
 
@@ -100,6 +101,14 @@ CODER (own context): Implements feature
     ↓
 CODER: Reports completion
     ↓
+CLAUDE: Invokes coding-standards-checker subagent
+    ↓
+STANDARDS CHECKER (own context): Reviews code against standards
+    ↓
+    ├─→ Violations found? → Invokes CODER with fixes → Re-check
+    ↓
+STANDARDS CHECKER: Reports compliance
+    ↓
 CLAUDE: Invokes tester subagent
     ↓
 TESTER (own context): Playwright screenshots & verification
@@ -150,6 +159,22 @@ Repeat until all todos done ✅
 - Reports completion back to Claude
 
 **When it's used**: Claude delegates each coding todo to this subagent (after refactoring)
+
+### Coding Standards Checker Subagent
+**Fresh Context Per Review**
+
+- Gets invoked after each coder completion
+- Works in its own clean context window
+- Reads coding standards from `.claude/coding-standards/`
+- Verifies code against ALL coding standards
+- **Critical violations**: Sends code back to coder with detailed fixes
+- **No violations**: Passes code to tester
+- Uses Grep tool to efficiently scan for common violations
+- Enforces: no default arguments, no env var access, dependency injection, thin controllers, etc.
+
+**When it's used**: Claude invokes this IMMEDIATELY after coder completes, BEFORE testing begins
+
+**Why it exists**: Ensures 100% coding standards compliance before any testing. Acts as a quality gatekeeper - no non-compliant code reaches the tester.
 
 ### Tester Subagent
 **Fresh Context Per Verification**
@@ -203,6 +228,12 @@ Claude invokes coder(todo #1: "Set up HTML structure")
 Coder (own context): Creates index.html
 Coder: Reports completion to Claude
 
+Claude invokes coding-standards-checker
+
+Standards Checker (own context): Reviews index.html
+Standards Checker: No violations found
+Standards Checker: Reports compliance to Claude
+
 Claude invokes tester("Verify HTML structure loads")
 
 Tester (own context): Uses Playwright to navigate
@@ -215,8 +246,28 @@ Claude: Marks todo #1 complete ✓
 Claude invokes coder(todo #2: "Create hero section")
 
 Coder (own context): Implements hero section
-Coder: ERROR - image file not found
-Coder: Invokes stuck subagent
+Coder: Reports completion to Claude
+
+Claude invokes coding-standards-checker
+
+Standards Checker (own context): Reviews hero section code
+Standards Checker: VIOLATION - Function has default argument
+Standards Checker: Invokes coder with violation report
+
+Coder (own context): Fixes default argument violation
+Coder: Reports completion to Claude
+
+Claude invokes coding-standards-checker (re-check)
+
+Standards Checker (own context): Reviews fixed code
+Standards Checker: No violations found
+Standards Checker: Reports compliance to Claude
+
+Claude invokes tester("Verify hero section renders")
+
+Tester (own context): Uses Playwright
+Tester: ERROR - image file not found
+Tester: Invokes stuck subagent
 
 Stuck (own context): Asks YOU:
   "Hero image 'hero.jpg' not found. How to proceed?"
@@ -241,10 +292,11 @@ Coder: Reports completion to Claude
 ├── .claude/
 │   ├── CLAUDE.md              # Orchestration instructions for main Claude
 │   ├── agents/
-│   │   ├── coder.md          # Coder subagent definition
-│   │   ├── refactorer.md     # Refactorer subagent definition
-│   │   ├── tester.md         # Tester subagent definition
-│   │   └── stuck.md          # Stuck subagent definition
+│   │   ├── coder.md                      # Coder subagent definition
+│   │   ├── refactorer.md                 # Refactorer subagent definition
+│   │   ├── coding-standards-checker.md   # Standards checker subagent definition
+│   │   ├── tester.md                     # Tester subagent definition
+│   │   └── stuck.md                      # Stuck subagent definition
 │   └── coding-standards/
 │       ├── README.md         # Coding standards overview
 │       ├── general.md        # Language-agnostic principles
@@ -293,9 +345,10 @@ The magic happens because:
 - **Claude (200k context)** = Maintains big picture, manages todos
 - **Refactorer (fresh context)** = Improves existing code quality before new work
 - **Coder (fresh context)** = Implements one task at a time following standards
+- **Coding Standards Checker (fresh context)** = Enforces standards compliance before testing
 - **Tester (fresh context)** = Verifies one implementation at a time
 - **Stuck (fresh context)** = Handles one problem at a time with human input
-- **Coding standards** = Shared rules in `.claude/coding-standards/` that both refactorer and coder follow
+- **Coding standards** = Shared rules in `.claude/coding-standards/` that refactorer, coder, and standards checker follow
 - **Each subagent** has specific tools and hardwired escalation rules
 
 ## 🎯 Best Practices
