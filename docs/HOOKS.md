@@ -12,7 +12,7 @@ This project uses **Claude Code hooks** to create automatic quality gates that r
 
 Previously, the orchestrator had to manually manage the quality gate workflow:
 
-```
+```text
 Orchestrator → coder → Orchestrator → coding-standards-checker → Orchestrator → tester
 ```
 
@@ -26,7 +26,7 @@ This required:
 
 Hooks automate the quality gates:
 
-```
+```text
 Orchestrator → coder
                  ↓
          [SubagentStop hook]
@@ -247,7 +247,7 @@ This directory is:
 
 ### Complete Flow with Hooks
 
-```
+```text
 1. USER: "Build a user registration feature"
 
 2. ORCHESTRATOR:
@@ -385,6 +385,7 @@ Hooks execute with:
 3. **Limit hook permissions** where possible
 4. **Audit hook state files** regularly
 5. **Use timeout values** to prevent hung hooks
+6. **Validate hook input** - Ensure session_id and other inputs are properly validated to prevent path traversal
 
 ## Future Enhancements
 

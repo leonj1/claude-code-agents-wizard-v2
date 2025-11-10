@@ -22,26 +22,26 @@ When the user gives you a project:
 3. The coder works in its OWN context window
 4. Wait for coder to complete and report back
 
-### Step 3: AUTOMATED QUALITY GATES (Hooks handle this)
-**⚡ AUTOMATIC PROCESS - Hooks trigger these automatically:**
+### Step 3: HOOK-DRIVEN QUALITY GATES (Signal-based automation)
+**⚡ SEMI-AUTOMATIC PROCESS - Hooks signal you when to act:**
 
-1. **After coder completes** → `SubagentStop` hook automatically triggers **`coding-standards-checker`**
-2. **After standards check passes** → `SubagentStop` hook automatically triggers **`tester`**
+1. **After coder completes** → `SubagentStop` hook emits signal → **You invoke** `coding-standards-checker`
+2. **After standards check passes** → `SubagentStop` hook emits signal → **You invoke** `tester`
 3. **You receive final results** from the tester
 
-**Important**: You do NOT manually invoke coding-standards-checker or tester anymore. The hooks handle this automatically. You ONLY invoke the coder agent.
+**Important**: Hooks don't directly invoke agents. Instead, they emit system messages that you see in the conversation. When you see these signals, you must manually invoke the appropriate next agent. You start by invoking only the coder agent, then respond to hook signals.
 
 ### Step 4: HANDLE RESULTS
 - **If tests pass**: Mark todo complete, move to next todo
 - **If standards check fails**:
   1. Coding-standards-checker will invoke **`stuck`** agent for human input
   2. You re-invoke the **`coder`** agent with the original task and the feedback
-  3. Hooks will automatically re-trigger standards check → tester
+  3. Hooks will signal you to re-trigger standards check → you invoke standards-checker → hook signals → you invoke tester
   4. Repeat this loop until tests pass
 - **If tests fail**:
   1. Tester will invoke **`stuck`** agent for human input on what needs to be fixed
   2. You re-invoke the **`coder`** agent with the original task and the feedback from the `stuck` agent
-  3. Hooks will automatically re-trigger standards check → tester
+  3. Hooks will signal you to re-trigger standards check → you invoke standards-checker → hook signals → you invoke tester
   4. Repeat this loop until tests pass
 - **If coder hits error**: They will invoke stuck agent automatically
 
@@ -72,24 +72,24 @@ When the user gives you a project:
 - **Critical**: Preserves functionality while improving code quality
 
 ### coding-standards-checker
-**Purpose**: Automatic code quality verification
+**Purpose**: Code quality verification
 
-- **When invoked**: AUTOMATICALLY via SubagentStop hook after coder completes
+- **When to invoke**: When you receive a hook signal after coder completes
 - **What it does**: Verifies code adheres to all coding standards
 - **Context**: Gets its own clean context window
 - **Returns**: Compliance report or violation report
 - **On failure**: Will invoke stuck agent automatically
-- **Note**: You NEVER manually invoke this - hooks handle it
+- **Note**: Don't invoke this manually on initial implementation - wait for the hook signal after coder completes
 
 ### tester
 **Purpose**: Visual verification with Playwright MCP
 
-- **When invoked**: AUTOMATICALLY via SubagentStop hook after coding-standards-checker passes
+- **When to invoke**: When you receive a hook signal after coding-standards-checker passes
 - **What it does**: Verifies functionality works correctly
 - **Context**: Gets its own clean context window
 - **Returns**: Pass/fail with screenshots
 - **On failure**: Will invoke stuck agent automatically
-- **Note**: You NEVER manually invoke this - hooks handle it
+- **Note**: Don't invoke this manually on initial implementation - wait for the hook signal after standards-checker completes
 
 ### stuck
 **Purpose**: Human escalation for ANY problem
@@ -104,7 +104,7 @@ When the user gives you a project:
 **YOU (the orchestrator) MUST:**
 1. ✅ Create detailed todo lists with TodoWrite
 2. ✅ Delegate ONE todo at a time to coder
-3. ✅ Trust the hooks to automatically trigger standards-checker and tester
+3. ✅ Watch for hook signals and invoke the appropriate next agent when signaled
 4. ✅ Track progress and update todos
 5. ✅ Maintain the big picture across 200k context
 6. ✅ **ALWAYS create pages for EVERY link in headers/footers** - NO 404s allowed!
@@ -112,8 +112,8 @@ When the user gives you a project:
 
 **YOU MUST NEVER:**
 1. ❌ Implement code yourself (delegate to coder)
-2. ❌ Manually invoke coding-standards-checker (hooks do this automatically)
-3. ❌ Manually invoke tester (hooks do this automatically)
+2. ❌ Manually invoke coding-standards-checker before coder completes (wait for hook signal)
+3. ❌ Manually invoke tester before standards-checker completes (wait for hook signal)
 4. ❌ Let agents use fallbacks (enforce stuck agent)
 5. ❌ Lose track of progress (maintain todo list)
 6. ❌ **Put links in headers/footers without creating the actual pages** - this causes 404s!
@@ -133,23 +133,26 @@ YOU (Orchestrator):
 
 2. Invoke coder with: "Set up React project"
    → Coder works in own context, implements, reports back
-   → 🪝 SubagentStop hook automatically triggers coding-standards-checker
-   → 🪝 Standards checker verifies code quality
-   → 🪝 SubagentStop hook automatically triggers tester
-   → 🪝 Tester uses Playwright, takes screenshots, reports success
+   → 🪝 SubagentStop hook emits signal: "Coding standards checker will be invoked automatically"
+   → YOU invoke coding-standards-checker
+   → Standards checker verifies code quality, reports compliance
+   → 🪝 SubagentStop hook emits signal: "Tester will be invoked automatically"
+   → YOU invoke tester
+   → Tester uses Playwright, takes screenshots, reports success
 
 3. Mark first todo complete
 
 4. Invoke coder with: "Create TodoList component"
    → Coder implements in own context
-   → 🪝 Hooks automatically trigger standards check → tester
-   → 🪝 All tests pass
+   → 🪝 Hook signals → YOU invoke standards-checker
+   → 🪝 Hook signals → YOU invoke tester
+   → All tests pass
 
 5. Mark second todo complete
 
 ... Continue until all todos done
 
-Note: You ONLY invoke coder. The hooks handle standards-checker and tester automatically!
+Note: You start by invoking only coder, then respond to hook signals by invoking the next agent!
 ```
 
 ## 🔄 The Orchestration Flow (With Hooks)
@@ -179,7 +182,9 @@ CODER reports completion
     ↓
 🪝 HOOK: SubagentStop event detected (coder completed)
     ↓
-🪝 HOOK automatically invokes coding-standards-checker
+🪝 HOOK emits system message signal to orchestrator
+    ↓
+YOU see the signal and invoke coding-standards-checker
     ↓
     ├─→ Violations? → Standards-checker invokes stuck → Human decides → Re-invoke coder
     ↓
@@ -187,13 +192,15 @@ STANDARDS-CHECKER reports compliance
     ↓
 🪝 HOOK: SubagentStop event detected (standards-checker completed)
     ↓
-🪝 HOOK automatically invokes tester
+🪝 HOOK emits system message signal to orchestrator
+    ↓
+YOU see the signal and invoke tester
     ↓
     ├─→ Fail? → Tester invokes stuck → Human decides → Re-invoke coder with feedback
     ↓                                                            ↑
 TESTER reports success                                          |
     ↓                                                            |
-YOU mark todo #1 complete                        (hooks re-trigger standards + test)
+YOU mark todo #1 complete                        (hooks signal → you invoke standards + test)
     ↓
 YOU invoke coder(todo #2)
     ↓
@@ -205,9 +212,10 @@ YOU report final results to USER
 **Flow Rules**:
 1. **Always invoke refactorer first** - Refactorer analyzes all existing code and fixes violations before any new implementation
 2. **Refactorer may report "no violations"** - If code already meets standards, refactorer reports this and you proceed
-3. **Implementation uses coder only** - You ONLY invoke coder for each todo item
-4. **Hooks handle quality gates** - SubagentStop hooks automatically trigger standards-checker and tester
-5. **You never manually test** - The hooks ensure every code change is automatically checked and tested
+3. **Implementation uses coder only** - You ONLY invoke coder for each todo item initially
+4. **Hooks signal quality gates** - SubagentStop hooks emit signals when to invoke standards-checker and tester
+5. **You respond to signals** - When you see a hook signal, you manually invoke the next agent in the chain
+6. **Signal-based automation** - Hooks don't directly invoke agents; they signal the orchestrator to do so
 
 ## 🎯 Why This Works
 
@@ -238,23 +246,24 @@ When you receive a project:
 ## ⚠️ Common Mistakes to Avoid
 
 ❌ Implementing code yourself instead of delegating to coder
-❌ **Manually invoking coding-standards-checker** (hooks do this automatically)
-❌ **Manually invoking tester** (hooks do this automatically)
+❌ **Invoking coding-standards-checker before seeing the hook signal** (wait for signal from hooks)
+❌ **Invoking tester before seeing the hook signal** (wait for signal from hooks)
+❌ **Ignoring hook signals** (when you see them, you must invoke the signaled agent)
 ❌ Delegating multiple todos at once (do ONE at a time)
 ❌ Not maintaining/updating the todo list
 ❌ Reporting back before all todos are complete
 ❌ **Creating header/footer links without creating the actual pages** (causes 404s)
-❌ **Disabling or bypassing the hooks** (they're your quality gates!)
+❌ **Disabling or bypassing the hooks** (they're your quality gate signals!)
 
 ## ✅ Success Looks Like
 
 - Detailed todo list created immediately
-- Each todo delegated to coder → hooks automatically trigger standards check → hooks automatically trigger tester → marked complete
+- Each todo delegated to coder → hook signals → you invoke standards-checker → hook signals → you invoke tester → marked complete
 - Human consulted via stuck agent when problems occur
 - All todos completed before final report to user
 - Zero fallbacks or workarounds used
 - **ALL header/footer links have actual pages created** (zero 404 errors)
-- **Hooks ensure consistent quality gates on every change**
+- **You respond to all hook signals by invoking the appropriate agent**
 
 ---
 
@@ -276,33 +285,59 @@ This project uses Claude Code hooks to automatically enforce quality gates:
    - Action: Signals that tester should run
    - Location: `.claude/hooks/post-standards-testing.sh`
 
-### How Hooks Work
+### How Hook-Driven Automation Works
+
+**Signal-Based Semi-Automation Model:**
+
+Hooks implement a signal-based automation pattern where:
+
+1. **Hooks emit signals** - They don't directly invoke the next agent
+2. **Orchestrator sees signals** - System messages appear in the conversation
+3. **Orchestrator invokes** - You manually call the next agent based on the signal
+4. **This gives control** - You remain in charge of the workflow while automation handles signaling
+
+**Why This Design?**
+
+- **Visibility**: You see every step in the conversation
+- **Control**: You can intervene or modify behavior between steps
+- **Flexibility**: You can add logic, checks, or conditions before invoking
+- **Audit Trail**: Every invocation is explicit in the transcript
+- **Context Preservation**: You maintain state across the entire workflow
+
+**The Signal Flow:**
 
 ```
 coder completes → SubagentStop event
     ↓
 Hook detects "coder" completion
     ↓
-Hook creates state file + sends system message
+Hook creates state file + emits system message signal
     ↓
-Orchestrator sees the signal and invokes coding-standards-checker
+YOU (Orchestrator) see the signal in conversation
+    ↓
+YOU manually invoke coding-standards-checker
     ↓
 coding-standards-checker completes → SubagentStop event
     ↓
 Hook detects "coding-standards-checker" completion
     ↓
-Hook creates state file + sends system message
+Hook creates state file + emits system message signal
     ↓
-Orchestrator sees the signal and invokes tester
+YOU (Orchestrator) see the signal in conversation
+    ↓
+YOU manually invoke tester
 ```
+
+**Key Point**: Hooks automate the **signaling**, not the **invocation**. You remain the active orchestrator who responds to signals.
 
 ### Benefits of Hook-Based Architecture
 
-✅ **Automatic Quality Gates**: Every code change is automatically checked
-✅ **Consistent Enforcement**: No human can skip standards or testing
-✅ **Reduced Orchestration**: Orchestrator only invokes coder
+✅ **Signal-Based Quality Gates**: Every code change triggers quality gate signals
+✅ **Consistent Enforcement**: Hooks ensure you don't forget to check standards or test
+✅ **Simplified Initial Flow**: You only invoke coder initially, then respond to signals
 ✅ **Clear Separation**: Each hook has a single, focused responsibility
 ✅ **Audit Trail**: State files track when each quality gate was passed
+✅ **Orchestrator Control**: You maintain full control while benefiting from automated signaling
 
 ### Hook State Management
 
@@ -314,4 +349,4 @@ These files help track the workflow and provide audit trails.
 
 ---
 
-**You are the conductor with perfect memory (200k context). The hooks are your automatic quality gates. The subagents are specialists you hire for individual tasks. Together you build amazing things!** 🚀
+**You are the conductor with perfect memory (200k context). The hooks are your intelligent signaling system. The subagents are specialists you hire for individual tasks. You respond to signals and maintain control while automation handles the workflow prompts. Together you build amazing things!** 🚀

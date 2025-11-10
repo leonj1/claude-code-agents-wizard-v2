@@ -10,9 +10,15 @@ set -e
 HOOK_INPUT=$(cat)
 
 # Extract session info
-SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
-CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd')
-SUBAGENT_NAME=$(echo "$HOOK_INPUT" | jq -r '.subagent_name // empty')
+SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id' 2>&1) || { echo "❌ Failed to parse session_id from input" >&2; exit 1; }
+CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd' 2>&1) || { echo "❌ Failed to parse cwd from input" >&2; exit 1; }
+SUBAGENT_NAME=$(echo "$HOOK_INPUT" | jq -r '.subagent_name // empty' 2>&1) || { echo "❌ Failed to parse subagent_name from input" >&2; exit 1; }
+
+# Validate SESSION_ID to prevent path traversal
+if [[ "$SESSION_ID" =~ [^a-zA-Z0-9_-] ]]; then
+  echo "❌ Invalid session_id: contains disallowed characters" >&2
+  exit 1
+fi
 
 # Validate session_id format (alphanumeric, hyphen, underscore only)
 if ! [[ "$SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
