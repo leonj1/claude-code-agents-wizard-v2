@@ -15,7 +15,7 @@ Use the Task tool to invoke the `refactorer` subagent with the following details
 **subagent_type**: `refactorer`
 
 **Prompt**:
-```
+```text
 Refactor the code at: $ARGUMENTS
 
 Analyze the specified file(s) or directory for coding standards violations and refactor the code to meet all standards while preserving functionality.
