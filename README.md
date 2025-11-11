@@ -57,13 +57,13 @@ That's it! The agents are now configured in your project:
 
 ### Starting a Project
 
-When you want to build something, just tell Claude your requirements:
+When you want to build something, use the `/coder` slash command with your requirements:
 
 ```
-You: "Build a todo app with React and TypeScript"
+You: "/coder Build a todo app with React and TypeScript"
 ```
 
-Claude will automatically:
+The `/coder` command activates orchestration mode, where Claude will:
 1. Create a detailed todo list using TodoWrite
 2. Delegate the first to-do to the **coder** subagent
 3. The coder implements in its own clean context window
@@ -73,12 +73,18 @@ Claude will automatically:
 7. Mark to-do complete and move to the next one
 8. Repeat until project complete
 
-**Optional**: Use the `/refactor` slash command to improve existing code quality:
+### Other Commands
+
+**`/refactor`** - Improve existing code quality:
 ```bash
 /refactor src/utils.py          # Refactor a specific file
 /refactor src/services/         # Refactor a directory
 /refactor                       # Analyze entire project
 ```
+
+### General Usage
+
+For exploratory tasks, questions, or non-coding requests, interact with Claude Code normally without the `/coder` command. Use `/coder` specifically when you want the full orchestrated development workflow with quality gates.
 
 ### The Workflow
 
@@ -271,7 +277,7 @@ Coder: Reports completion to Claude
 ```
 .
 ├── .claude/
-│   ├── CLAUDE.md              # Orchestration instructions for main Claude
+│   ├── CLAUDE.md              # Project configuration and documentation
 │   ├── agents/
 │   │   ├── coder.md                      # Coder subagent definition
 │   │   ├── refactorer.md                 # Refactorer subagent definition
@@ -279,7 +285,8 @@ Coder: Reports completion to Claude
 │   │   ├── tester.md                     # Tester subagent definition
 │   │   └── stuck.md                      # Stuck subagent definition
 │   ├── commands/
-│   │   └── refactor.md        # /refactor slash command (on-demand refactoring)
+│   │   ├── coder.md          # /coder slash command (orchestrated development)
+│   │   └── refactor.md       # /refactor slash command (on-demand refactoring)
 │   └── coding-standards/
 │       ├── README.md         # Coding standards overview
 │       ├── general.md        # Language-agnostic principles
@@ -318,19 +325,22 @@ This is an open system! Feel free to:
 
 This system leverages Claude Code's [subagent system](https://docs.claude.com/en/docs/claude-code/sub-agents):
 
-1. **CLAUDE.md** instructs main Claude to be the orchestrator
-2. **Subagents** are defined in `.claude/agents/*.md` files
-3. **Each subagent** gets its own fresh context window
-4. **Main Claude** maintains the 200k context with todos and project state
-5. **Playwright MCP** is configured in `.mcp.json` for visual testing
+1. **CLAUDE.md** provides project documentation and guidelines
+2. **Slash commands** (`.claude/commands/*.md`) activate specific workflows
+3. **`/coder` command** activates orchestration mode with full quality gates
+4. **Subagents** are defined in `.claude/agents/*.md` files
+5. **Each subagent** gets its own fresh context window
+6. **Main Claude** maintains the 200k context with todos and project state
+7. **Playwright MCP** is configured in `.mcp.json` for visual testing
 
 The magic happens because:
-- **Claude (200k context)** = Maintains big picture, manages todos
+- **Claude (200k context)** = Maintains big picture, manages todos (when using `/coder`)
 - **Coder (fresh context)** = Implements one task at a time following standards
 - **Coding Standards Checker (fresh context)** = Enforces standards compliance before testing
 - **Tester (fresh context)** = Verifies one implementation at a time
 - **Stuck (fresh context)** = Handles one problem at a time with human input
 - **Refactorer (on-demand via `/refactor`)** = Improves existing code quality when needed
+- **Orchestrator (activated via `/coder`)** = Manages the full development workflow with quality gates
 - **Coding standards** = Shared rules in `.claude/coding-standards/` that refactorer, coder, and standards checker follow
 - **Each subagent** has specific tools and hardwired escalation rules
 
@@ -344,12 +354,14 @@ The magic happens because:
 
 ## 🔥 Pro Tips
 
-- Use `/agents` command to see all available subagents
+- Use `/coder` to activate full orchestration mode for development projects
 - Use `/refactor` command to improve existing code quality on-demand
-- Claude maintains the todo list in its 200k context - check anytime
+- Use `/agents` command to see all available subagents
+- Claude maintains the todo list in its 200k context when using `/coder` - check anytime
 - Screenshots from tester are saved and can be reviewed
 - Each subagent has specific tools - check their `.md` files
 - Subagents get fresh contexts - no context pollution!
+- For exploration or questions, use Claude normally without slash commands
 
 ## 📜 License
 
@@ -363,4 +375,6 @@ Powered by Claude Code's agent system and Playwright MCP.
 
 ---
 
-**Ready to build something amazing?** Just run `claude` in this directory and tell it what you want to create! 🚀
+**Ready to build something amazing?** Just run `claude` in this directory and use `/coder` to activate orchestration mode! 🚀
+
+Example: `/coder Build a REST API with authentication and user management`
