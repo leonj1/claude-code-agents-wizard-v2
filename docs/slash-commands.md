@@ -53,6 +53,33 @@ This project provides specialized slash commands to activate different workflows
 4. Preserves all existing functionality
 5. Reports changes made
 
+### `/verifier` - Code Verification and Investigation
+
+**Purpose**: Investigate source code to verify claims, answer questions, or determine if queries are true/false.
+
+**When to use**:
+- Verifying claims about the codebase
+- Answering questions about code structure or functionality
+- Investigating specific code patterns or features
+- Determining if certain implementations exist
+- Fact-checking architectural decisions
+
+**Example usage**:
+```
+/verifier Does the codebase have email validation?
+/verifier Is this project using microservices architecture?
+/verifier Are there any functions that handle user authentication?
+/verifier Does the API support pagination?
+```
+
+**What happens**:
+1. Parses the query or claim
+2. Uses memory-efficient search strategy (Glob/Grep before Read)
+3. Gathers concrete evidence from the codebase
+4. Formulates determination (TRUE/FALSE/PARTIALLY TRUE/CANNOT DETERMINE)
+5. Provides structured report with file paths, line numbers, and code snippets
+6. Escalates to stuck agent if query is ambiguous or evidence is insufficient
+
 ## When NOT to Use Slash Commands
 
 You don't need slash commands for:
@@ -68,6 +95,7 @@ You don't need slash commands for:
 |------|---------|-------|
 | Build new feature | `/coder` | Full orchestration with quality gates |
 | Improve existing code | `/refactor` | Quality-focused, no new features |
+| Verify claims | `/verifier` | Evidence-based investigation |
 | Ask questions | None | Regular conversation |
 | Explore codebase | None | Regular conversation |
 | Quick fixes | None | Direct implementation |
@@ -76,16 +104,18 @@ You don't need slash commands for:
 
 1. **Use `/coder` for projects**: When starting something new, activate orchestration mode
 2. **Use `/refactor` for maintenance**: Clean up existing code periodically
-3. **Skip commands for exploration**: Questions and research don't need workflows
-4. **Trust the process**: Once activated, let the orchestration complete
-5. **Respond to stuck agent**: When problems occur, provide guidance to continue
+3. **Use `/verifier` for fact-checking**: Verify claims about the codebase with evidence
+4. **Skip commands for exploration**: Questions and research don't need workflows
+5. **Trust the process**: Once activated, let the orchestration complete
+6. **Respond to stuck agent**: When problems occur, provide guidance to continue
 
 ## Architecture
 
-Both commands leverage the agent system:
+All commands leverage the agent system:
 
 - **`/coder`**: Activates orchestrator → coder → standards-checker → tester loop
 - **`/refactor`**: Activates refactorer agent with coding standards focus
+- **`/verifier`**: Activates verifier agent for evidence-based investigation
 
 All commands use:
 - Specialized subagents (`.claude/agents/`)
@@ -97,5 +127,6 @@ All commands use:
 
 - See `.claude/commands/coder.md` for full orchestrator instructions
 - See `.claude/commands/refactor.md` for refactoring workflow
+- See `.claude/commands/verifier.md` for verification workflow
 - See `.claude/CLAUDE.md` for project configuration
 - See `README.md` for complete system documentation
