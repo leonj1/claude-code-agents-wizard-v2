@@ -23,6 +23,13 @@ Use this command to refactor existing code to adhere to coding standards.
 
 **Example**: `/refactor src/components/UserForm.js`
 
+### `/verifier` - Code Verification and Investigation
+Use this command to investigate source code and verify claims, answer questions, or determine if queries are true/false.
+
+**When to use**: When you need to verify a claim about the codebase, answer questions about code structure or functionality, or investigate specific code patterns.
+
+**Example**: `/verifier Does the codebase have email validation?`
+
 ## Project Structure
 
 - `.claude/agents/` - Specialized agent configurations
