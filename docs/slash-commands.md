@@ -65,7 +65,7 @@ This project provides specialized slash commands to activate different workflows
 - Fact-checking architectural decisions
 
 **Example usage**:
-```
+```bash
 /verifier Does the codebase have email validation?
 /verifier Is this project using microservices architecture?
 /verifier Are there any functions that handle user authentication?
