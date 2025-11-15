@@ -1,7 +1,6 @@
 ---
 description: Investigate source code to verify claims, answer questions, or determine if user queries are true/false
 argument-hint: [query-or-claim]
-model: claude-3-5-sonnet-20241022
 ---
 
 # Verifier Command
