@@ -365,6 +365,10 @@ If user chooses #2, invoke via SlashCommand tool: `/run-prompt 005`
 - First, check if clarification is needed before generating the prompt
 - Read `!ls ./prompts/ 2>/dev/null | sort -V | tail -1` to determine the next number in sequence
 - If ./prompts/ doesn't exist, create it with `!mkdir -p ./prompts/` before saving
+- **Ensure .gitignore is properly configured** for prompts directory:
+  - Check if .gitignore exists: `!test -f .gitignore || touch .gitignore`
+  - Add `prompts/completed/` to gitignore if not present: `!grep -qxF 'prompts/completed/' .gitignore || echo 'prompts/completed/' >> .gitignore`
+  - This keeps template prompts in git while excluding executed/completed prompts
 - Keep prompt filenames descriptive but concise
 - Adapt the XML structure to fit the task - not every tag is needed every time
 - Consider the user's working directory as the root for all relative paths
