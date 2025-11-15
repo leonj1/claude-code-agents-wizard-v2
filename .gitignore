@@ -26,3 +26,6 @@ Thumbs.db
 
 # Claude Code state files
 .claude/.state
+
+# Prompts - completed/executed prompts (temporary)
+prompts/completed/
