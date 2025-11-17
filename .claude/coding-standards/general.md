@@ -16,11 +16,17 @@ Language-agnostic principles that apply to all code.
 - One primary class/module per file
 - File names should clearly indicate their purpose
 - Group related functionality together, for example:
-  - ./src/clients: any client implementations that perform network or disk I/O including their interfaces 
+  - ./src/clients: any client implementations that perform network or disk I/O including their interfaces
   - ./src/models: any data structures that are used to represent data
   - ./src/repositories: any data access objects or repositories
   - ./src/services: any business logic or application services
 - Keep files focused and cohesive
+
+### File Size Limits
+- **Maximum 500 lines per file**
+- When a file exceeds 500 lines, extract the largest function into its own class and file
+- Maintain single responsibility principle - oversized files often indicate too many responsibilities
+- Apply this limit to all backend code (services, repositories, controllers, etc.)
 
 ### Naming Conventions
 - Use descriptive, meaningful names
