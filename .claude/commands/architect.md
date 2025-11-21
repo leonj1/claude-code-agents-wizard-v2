@@ -1,5 +1,5 @@
 ---
-name: create-prompt
+name: architect
 description: Expert prompt engineer that creates optimized, XML-structured prompts with intelligent depth selection
 argument-hint: [task description]
 ---
