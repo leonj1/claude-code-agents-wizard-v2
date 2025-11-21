@@ -292,8 +292,8 @@ Prompt 007 (coder): [Implementation summary with quality gate results]
 
 <routing_rules>
 - ALWAYS analyze task type before execution (frontmatter check → auto-detection)
-- Code tasks (default) → TDD workflow: test-creator → coder → standards → tests
-- Direct code tasks → coder workflow: coder → standards → tests (skip test-creator)
+- Code tasks (default) → TDD workflow: test-creator → coder → standards → tester
+- Direct code tasks → coder workflow: coder → standards → tester (skip test-creator)
 - Non-code tasks → general-purpose agent (no hooks)
 - When in doubt → route to TDD workflow (safer default for quality)
 - Respect explicit frontmatter executor specifications
