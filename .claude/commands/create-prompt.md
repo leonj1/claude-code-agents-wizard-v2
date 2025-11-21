@@ -274,91 +274,51 @@ Before completing, verify:
 
 9. **Verification Always**: Every prompt should include clear success criteria and verification steps
 
-<decision_tree>
-After saving the prompt(s), present this decision tree to the user:
-
----
-
-**Prompt(s) created successfully!**
+<auto_execution>
+After saving the prompt(s), AUTOMATICALLY invoke the run-prompt command:
 
 <single_prompt_scenario>
 If you created ONE prompt (e.g., `./prompts/005-implement-feature.md`):
 
-<presentation>
-✓ Saved prompt to ./prompts/005-implement-feature.md
-
-What's next?
-
-1. Run prompt now
-2. Review/edit prompt first
-3. Save for later
-4. Other
-
-Choose (1-4): \_
-</presentation>
-
 <action>
-If user chooses #1, invoke via SlashCommand tool: `/run-prompt 005`
+1. Inform user: "✓ Saved prompt to ./prompts/005-implement-feature.md"
+2. Automatically invoke via SlashCommand tool: `/run-prompt 005`
 </action>
 </single_prompt_scenario>
 
 <parallel_scenario>
 If you created MULTIPLE prompts that CAN run in parallel (e.g., independent modules, no shared files):
 
-<presentation>
-✓ Saved prompts:
-  - ./prompts/005-implement-auth.md
-  - ./prompts/006-implement-api.md
-  - ./prompts/007-implement-ui.md
+<action>
+1. Inform user:
+   "✓ Saved prompts:
+     - ./prompts/005-implement-auth.md
+     - ./prompts/006-implement-api.md
+     - ./prompts/007-implement-ui.md
 
-Execution strategy: These prompts can run in PARALLEL (independent tasks, no shared files)
+   Execution strategy: Running in PARALLEL (independent tasks, no shared files)"
 
-What's next?
-
-1. Run all prompts in parallel now (launches 3 sub-agents simultaneously)
-2. Run prompts sequentially instead
-3. Review/edit prompts first
-4. Other
-
-Choose (1-4): \_
-</presentation>
-
-<actions>
-If user chooses #1, invoke via SlashCommand tool: `/run-prompt 005 006 007 --parallel`
-If user chooses #2, invoke via SlashCommand tool: `/run-prompt 005 006 007 --sequential`
-</actions>
+2. Automatically invoke via SlashCommand tool: `/run-prompt 005 006 007 --parallel`
+</action>
 </parallel_scenario>
 
 <sequential_scenario>
 If you created MULTIPLE prompts that MUST run sequentially (e.g., dependencies, shared files):
 
-<presentation>
-✓ Saved prompts:
-  - ./prompts/005-setup-database.md
-  - ./prompts/006-create-migrations.md
-  - ./prompts/007-seed-data.md
+<action>
+1. Inform user:
+   "✓ Saved prompts:
+     - ./prompts/005-setup-database.md
+     - ./prompts/006-create-migrations.md
+     - ./prompts/007-seed-data.md
 
-Execution strategy: These prompts must run SEQUENTIALLY (dependencies: 005 → 006 → 007)
+   Execution strategy: Running SEQUENTIALLY (dependencies: 005 → 006 → 007)"
 
-What's next?
-
-1. Run prompts sequentially now (one completes before next starts)
-2. Run first prompt only (005-setup-database.md)
-3. Review/edit prompts first
-4. Other
-
-Choose (1-4): \_
-</presentation>
-
-<actions>
-If user chooses #1, invoke via SlashCommand tool: `/run-prompt 005 006 007 --sequential`
-If user chooses #2, invoke via SlashCommand tool: `/run-prompt 005`
-</actions>
+2. Automatically invoke via SlashCommand tool: `/run-prompt 005 006 007 --sequential`
+</action>
 </sequential_scenario>
 
----
-
-</decision_tree>
+</auto_execution>
 
 ## Meta Instructions
 
