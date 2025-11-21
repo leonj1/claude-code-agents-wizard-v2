@@ -33,7 +33,7 @@ prompts/
 
 ## Automatic Configuration
 
-The `/create-prompt` command automatically ensures `.gitignore` is configured correctly:
+The `/architect` command automatically ensures `.gitignore` is configured correctly:
 
 1. **Creates `.gitignore`** if it doesn't exist
 2. **Adds `prompts/completed/`** to gitignore if not already present
@@ -102,7 +102,7 @@ Then store:
 
 ```bash
 # Developer A creates a prompt
-/create-prompt Implement user authentication
+/architect Implement user authentication
 # Prompt saved to: prompts/005-implement-user-auth.md
 
 # Developer A commits and pushes
@@ -130,7 +130,7 @@ git pull
 
 ```bash
 # Create experimental prompt
-/create-prompt Try experimental AI model integration
+/architect Try experimental AI model integration
 # Saved to: prompts/999-experimental-ai.md
 
 # Don't commit (optional)
@@ -148,7 +148,7 @@ rm prompts/999-experimental-ai.md
 - Keep prompts generic (no hardcoded credentials)
 - Use descriptive filenames for prompts
 - Document what each prompt does in the prompt content
-- Let `/create-prompt` handle gitignore configuration automatically
+- Let `/architect` handle gitignore configuration automatically
 
 ### ❌ DON'T:
 - Commit `prompts/completed/` directory
@@ -170,7 +170,7 @@ git add prompts/001-good-template.md  # Commit templates
 # Leave prompts/042-one-time-task.md uncommitted
 
 # Ensure gitignore is configured
-grep 'prompts/completed/' .gitignore  # Should exist after next /create-prompt
+grep 'prompts/completed/' .gitignore  # Should exist after next /architect
 ```
 
 ### If You Already Committed `prompts/completed/`
