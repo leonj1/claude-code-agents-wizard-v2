@@ -5,7 +5,7 @@ argument-hint: <prompt-number(s)-or-name> [--parallel|--sequential]
 ---
 
 <objective>
-Execute one or more prompts from `./prompts/` as delegated sub-tasks with fresh context. Intelligently routes code implementation tasks through the /coder workflow (with automatic quality gates) and non-code tasks through general-purpose agents. Supports single prompt execution, parallel execution of multiple independent prompts, and sequential execution of dependent prompts.
+Execute one or more prompts from `./prompts/` as delegated sub-tasks with fresh context. Follows Test-Driven Development (TDD) approach by routing code tasks through: test-creator → coder → coding-standards-checker → tester. Non-code tasks route directly to general-purpose agents. Supports single prompt execution, parallel execution of multiple independent prompts, and sequential execution of dependent prompts.
 </objective>
 
 <input>
@@ -61,9 +61,14 @@ Check if prompt has YAML frontmatter with executor specification:
 
 ```yaml
 ---
-executor: coder | general-purpose
+executor: tdd | coder | general-purpose
 ---
 ```
+
+Executor options:
+- **tdd**: Test-Driven Development flow (test-creator → coder → standards → tester)
+- **coder**: Direct implementation flow (coder → standards → tester)
+- **general-purpose**: Non-code tasks (research, documentation, analysis)
 
 If frontmatter specifies executor explicitly, use that (skip auto-detection).
 </frontmatter_detection>
@@ -97,19 +102,19 @@ Count occurrences of non-code task keywords:
 </non_code_indicators>
 
 <decision_logic>
-- If code_score >= 3: **Code task** → Use /coder workflow
+- If code_score >= 3: **Code task (TDD)** → Use TDD workflow (test-creator → coder)
 - If non_code_score > code_score AND code_score < 3: **Non-code task** → Use general-purpose
-- If code_score >= 2 AND mentions tests/standards: **Code task** → Use /coder workflow
-- Default (ambiguous): **Code task** → Use /coder workflow (safer default for quality)
+- If code_score >= 2 AND mentions tests/standards: **Code task (TDD)** → Use TDD workflow
+- Default (ambiguous): **Code task (TDD)** → Use TDD workflow (safer default for quality)
 
-**Rationale**: When in doubt, route through /coder to ensure quality gates. The hooks will only trigger if actual code changes are made.
+**Rationale**: When in doubt, route through TDD to ensure tests are written first. This provides better quality gates and clearer specifications for implementation.
 </decision_logic>
 </auto_detection>
 
 <task_type_output>
 Store for each prompt:
 - file_path: "./prompts/XXX-name.md"
-- executor: "coder" | "general-purpose"
+- executor: "tdd" | "coder" | "general-purpose"
 - detection_method: "frontmatter" | "auto-detected" | "default"
 </task_type_output>
 </step2b_analyze_task_type>
@@ -121,17 +126,31 @@ Store for each prompt:
 2. Analyze task type (step2b) to determine executor
 3. Route based on executor type:
 
+   <tdd_task_routing>
+   If executor == "tdd":
+   - **Step 1**: Invoke Task tool with subagent_type="test-creator" and prompt content
+   - **Test-creator agent** creates comprehensive failing tests following TDD Red phase
+   - Wait for test-creator to complete and return test files
+   - **Step 2**: Invoke Task tool with subagent_type="coder" with BOTH:
+     * Original prompt content
+     * Test files created by test-creator
+     * Instruction: "Implement code to make these tests pass"
+   - **Coder agent** implements the task to pass the tests (TDD Green phase)
+   - Wait for coder to complete
+   - **Step 3**: SubagentStop hook signals → invoke coding-standards-checker
+   - Wait for standards check to complete
+   - **Step 4**: SubagentStop hook signals → invoke tester
+   - Full TDD cycle: Red (tests) → Green (implementation) → Quality gates
+   </tdd_task_routing>
+
    <code_task_routing>
    If executor == "coder":
-   - Invoke SlashCommand tool: `/coder [prompt content]`
-   - This triggers the full /coder workflow:
-     * Coder agent implements the task
-     * SubagentStop hook signals orchestrator
-     * Orchestrator invokes coding-standards-checker
-     * SubagentStop hook signals orchestrator
-     * Orchestrator invokes tester
-   - Wait for complete workflow to finish
-   - All quality gates applied automatically via hooks
+   - Invoke Task tool with subagent_type="coder" and prompt content
+   - **Coder agent** implements the task directly (no test-creator phase)
+   - Wait for coder to complete
+   - SubagentStop hook signals → invoke coding-standards-checker
+   - SubagentStop hook signals → invoke tester
+   - Direct implementation workflow (skip TDD test-first approach)
    </code_task_routing>
 
    <general_task_routing>
@@ -155,26 +174,30 @@ Store for each prompt:
    <mixed_executor_parallel>
    For each prompt, route based on its executor:
 
-   - Code tasks: Use SlashCommand `/coder [content]`
-   - General tasks: Use Task tool with subagent_type="general-purpose"
+   - TDD tasks: Invoke Task tool with subagent_type="test-creator" (tests created first, then coder invoked sequentially)
+   - Code tasks: Invoke Task tool with subagent_type="coder" (direct implementation)
+   - General tasks: Invoke Task tool with subagent_type="general-purpose"
 
-   **CRITICAL**: All tool invocations (SlashCommand and Task) MUST be in a single message for true parallel execution.
+   **IMPORTANT**: TDD tasks CANNOT be parallelized internally (test-creator must finish before coder). However, multiple TDD tasks can start in parallel, each running their own test-creator → coder sequence.
+
+   **CRITICAL**: All initial tool invocations (Task tools) MUST be in a single message for true parallel execution.
 
    <example>
    Single message with multiple tool calls:
-   - SlashCommand `/coder [prompt 005 content]` (code task)
-   - Task tool for prompt 006 (general task)
-   - SlashCommand `/coder [prompt 007 content]` (code task)
+   - Task tool with subagent_type="test-creator" for prompt 005 (TDD task)
+   - Task tool with subagent_type="general-purpose" for prompt 006 (research task)
+   - Task tool with subagent_type="coder" for prompt 007 (direct code task)
 
    All execute simultaneously!
    </example>
    </mixed_executor_parallel>
 
    <important_note>
-   - Code tasks routed through /coder will trigger their own quality gate workflows independently
-   - Each /coder invocation gets its own hook-driven standards check → test cycle
-   - General tasks complete without quality gates
-   - All tasks execute in parallel regardless of executor type
+   - TDD tasks: test-creator → coder → standards → tester (sequential within each task)
+   - Code tasks: coder → standards → tester (sequential within each task)
+   - General tasks: complete without quality gates
+   - Multiple tasks can execute in parallel, but each task's internal flow is sequential
+   - Each coder invocation triggers SubagentStop hooks for quality gates
    </important_note>
 
 4. Wait for ALL to complete
@@ -187,8 +210,9 @@ Store for each prompt:
 1. Read first prompt file
 2. Analyze task type (step2b) to determine executor
 3. Route based on executor:
-   - If "coder": Invoke SlashCommand `/coder [content]` → wait for full workflow (implementation → standards → tests)
-   - If "general-purpose": Invoke Task tool → wait for completion
+   - If "tdd": Invoke Task tool with subagent_type="test-creator" → wait for tests → invoke Task tool with subagent_type="coder" → wait for implementation → wait for quality gates (standards → tester via hooks)
+   - If "coder": Invoke Task tool with subagent_type="coder" → wait for implementation → wait for quality gates (standards → tester via hooks)
+   - If "general-purpose": Invoke Task tool with subagent_type="general-purpose" → wait for completion
 4. Archive first prompt with metadata
 5. Read second prompt file
 6. Analyze task type for second prompt
@@ -215,26 +239,26 @@ By delegating to a sub-task, the actual implementation work happens in fresh con
 <output>
 <single_prompt_output>
 ✓ Executed: ./prompts/005-implement-feature.md
-✓ Executor: coder (auto-detected)
-✓ Quality gates: Standards ✓ | Tests ✓
+✓ Executor: tdd (auto-detected)
+✓ TDD Flow: test-creator ✓ → coder ✓ → standards ✓ → tester ✓
 ✓ Archived to: ./prompts/completed/005-implement-feature.md
 
 <results>
-[Summary of what the sub-task accomplished]
+[Summary of what the sub-task accomplished, including tests created and implementation]
 </results>
 </single_prompt_output>
 
 <parallel_output>
 ✓ Executed in PARALLEL:
 
-- ./prompts/005-implement-auth.md (executor: coder, quality gates applied)
+- ./prompts/005-implement-auth.md (executor: tdd, TDD flow completed)
 - ./prompts/006-research-competitors.md (executor: general-purpose)
-- ./prompts/007-implement-ui.md (executor: coder, quality gates applied)
+- ./prompts/007-implement-ui.md (executor: coder, direct implementation flow)
 
 ✓ All archived to ./prompts/completed/
 
 <results>
-Prompt 005 (coder): [Implementation summary with quality gate results]
+Prompt 005 (tdd): [Tests created → Implementation summary with quality gate results]
 Prompt 006 (general-purpose): [Research summary]
 Prompt 007 (coder): [Implementation summary with quality gate results]
 </results>
@@ -243,14 +267,14 @@ Prompt 007 (coder): [Implementation summary with quality gate results]
 <sequential_output>
 ✓ Executed SEQUENTIALLY:
 
-1. ./prompts/005-setup-database.md → Success (executor: coder, quality gates ✓)
+1. ./prompts/005-setup-database.md → Success (executor: tdd, TDD flow ✓)
 2. ./prompts/006-create-migrations.md → Success (executor: coder, quality gates ✓)
-3. ./prompts/007-seed-data.md → Success (executor: coder, quality gates ✓)
+3. ./prompts/007-seed-data.md → Success (executor: tdd, TDD flow ✓)
 
 ✓ All archived to ./prompts/completed/
 
 <results>
-[Consolidated summary showing progression through each step with quality gate results]
+[Consolidated summary showing progression through each step with TDD flows and quality gate results]
 </results>
 </sequential_output>
 </output>
@@ -258,8 +282,9 @@ Prompt 007 (coder): [Implementation summary with quality gate results]
 <critical_notes>
 
 <execution_rules>
-- For parallel execution: ALL tool calls (SlashCommand and Task) MUST be in a single message
-- For sequential execution: Wait for each prompt to complete fully (including quality gates) before starting next
+- For parallel execution: ALL initial tool calls (Task tools) MUST be in a single message
+- For sequential execution: Wait for each prompt to complete fully (including TDD flow and quality gates) before starting next
+- TDD flow is sequential within each task: test-creator → coder → standards → tester
 - Archive prompts only after successful completion
 - If any prompt fails, stop sequential execution and report error
 - Provide clear, consolidated results for multiple prompt execution
@@ -267,19 +292,22 @@ Prompt 007 (coder): [Implementation summary with quality gate results]
 
 <routing_rules>
 - ALWAYS analyze task type before execution (frontmatter check → auto-detection)
-- Code tasks → `/coder` workflow (triggers hooks: standards → tests)
-- Non-code tasks → `general-purpose` agent (no hooks)
-- When in doubt → route to `/coder` (safer default for quality)
+- Code tasks (default) → TDD workflow: test-creator → coder → standards → tests
+- Direct code tasks → coder workflow: coder → standards → tests (skip test-creator)
+- Non-code tasks → general-purpose agent (no hooks)
+- When in doubt → route to TDD workflow (safer default for quality)
 - Respect explicit frontmatter executor specifications
 </routing_rules>
 
 <quality_gate_behavior>
-- `/coder` invocations automatically trigger SubagentStop hooks
-- Hooks signal orchestrator to invoke coding-standards-checker
-- Then hooks signal orchestrator to invoke tester
-- This happens automatically for ALL code tasks
+- **TDD Flow**: test-creator creates tests → coder implements → SubagentStop hooks trigger standards → tester
+- **Direct Code Flow**: coder implements → SubagentStop hooks trigger standards → tester
+- **General Flow**: general-purpose agent executes → no quality gates
+- SubagentStop hooks automatically signal when to invoke coding-standards-checker
+- Then hooks signal when to invoke tester
+- This happens automatically for ALL code tasks (both TDD and direct)
 - General-purpose tasks skip quality gates entirely
-- Mixed parallel execution: Code tasks get quality gates, general tasks don't
+- Mixed parallel execution: Code tasks get full workflows, general tasks don't
 </quality_gate_behavior>
 
 <frontmatter_usage>
@@ -287,9 +315,19 @@ To explicitly control executor, add to top of prompt file:
 
 ```yaml
 ---
+executor: tdd
+---
+```
+(Full TDD: test-creator → coder → standards → tester)
+
+or
+
+```yaml
+---
 executor: coder
 ---
 ```
+(Direct implementation: coder → standards → tester, skip test-creator)
 
 or
 
@@ -298,6 +336,7 @@ or
 executor: general-purpose
 ---
 ```
+(Research/docs: no quality gates)
 
 This overrides auto-detection.
 </frontmatter_usage>
@@ -306,7 +345,8 @@ This overrides auto-detection.
 <benefits>
 
 <intelligent_routing>
-✅ **Automatic Quality Gates**: Code tasks automatically get standards checks and tests via /coder workflow
+✅ **Test-Driven Development**: Code tasks default to TDD workflow (tests written first)
+✅ **Automatic Quality Gates**: All code tasks get standards checks and tests
 ✅ **Lightweight Non-Code Tasks**: Research, documentation, analysis tasks skip unnecessary quality gates
 ✅ **Flexible Control**: Frontmatter allows explicit executor control when needed
 ✅ **Smart Defaults**: Auto-detection means prompts "just work" without manual configuration
@@ -314,24 +354,31 @@ This overrides auto-detection.
 </intelligent_routing>
 
 <workflow_integration>
-✅ **Leverages /coder Infrastructure**: Reuses existing hooks, agents, and quality gate workflows
+✅ **TDD First Approach**: Tests are created before implementation, providing clear specifications
+✅ **Leverages Agent Infrastructure**: Reuses existing hooks, agents, and quality gate workflows
 ✅ **Consistent Quality**: Code changes always go through the same rigorous process
 ✅ **Hook-Driven**: SubagentStop hooks automatically coordinate quality gates
-✅ **No Duplication**: Routing through /coder means one source of truth for code quality workflow
+✅ **Clear Specification**: test-creator agent provides clear contract for coder agent to fulfill
+✅ **Better Coverage**: Tests written first ensure comprehensive test coverage
 </workflow_integration>
 
 <examples>
 
-<example_auto_detection_code>
+<example_auto_detection_tdd>
 Prompt content:
 "Implement a React component for user authentication with JWT tokens. Ensure tests pass and code follows standards."
 
 Auto-detection:
 - Keywords found: "implement" (1), "component" (1), "React" (1), "authentication" (1), "tests" (1), "standards" (1)
 - Code score: 6
-- Decision: Route to /coder ✓
-- Quality gates applied: Standards check ✓ | Tests ✓
-</example_auto_detection_code>
+- Decision: Route to TDD workflow ✓
+- Execution flow:
+  1. test-creator creates failing tests for authentication component
+  2. coder implements component to pass tests
+  3. coding-standards-checker verifies code quality
+  4. tester validates functionality
+- Quality gates applied: TDD ✓ | Standards ✓ | Tests ✓
+</example_auto_detection_tdd>
 
 <example_auto_detection_research>
 Prompt content:
@@ -344,22 +391,44 @@ Auto-detection:
 - Quality gates: None (not needed for research)
 </example_auto_detection_research>
 
-<example_frontmatter_override>
+<example_frontmatter_override_direct>
+Prompt with frontmatter:
+```yaml
+---
+executor: coder
+---
+
+Quick fix: Update the login button color to match brand guidelines.
+```
+
+Execution:
+- Frontmatter detected: executor = coder
+- Auto-detection skipped (frontmatter takes precedence)
+- Routed to: coder agent (direct implementation, skip test-creator) ✓
+- Execution flow:
+  1. coder implements the change
+  2. coding-standards-checker verifies code quality
+  3. tester validates functionality
+- Quality gates: Standards ✓ | Tests ✓
+- Note: TDD test-creator skipped for simple change
+</example_frontmatter_override_direct>
+
+<example_frontmatter_override_general>
 Prompt with frontmatter:
 ```yaml
 ---
 executor: general-purpose
 ---
 
-Build a quick prototype for internal testing only. Skip quality checks.
+Research the latest React 19 features and create a summary document.
 ```
 
 Execution:
 - Frontmatter detected: executor = general-purpose
 - Auto-detection skipped (frontmatter takes precedence)
 - Routed to: general-purpose agent ✓
-- Quality gates: None
-</example_frontmatter_override>
+- Quality gates: None (research task)
+</example_frontmatter_override_general>
 
 </examples>
 
