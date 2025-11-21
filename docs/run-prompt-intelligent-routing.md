@@ -250,7 +250,7 @@ Execute prompts one after another:
 ### Old Workflow (Manual)
 ```bash
 # Create prompt
-/create-prompt Implement authentication
+/architect Implement authentication
 
 # Start new session
 # Run prompt
@@ -263,14 +263,14 @@ Execute prompts one after another:
 
 ### New Workflow (Intelligent Routing)
 ```bash
-# Create and run automatically (or use create-prompt decision tree)
-/create-prompt Implement authentication
-# Choose option 1 to run immediately
+# Create and run automatically (architect automatically invokes run-prompt)
+/architect Implement authentication
+# Automatically creates prompt and executes with TDD workflow
 
 # OR create first, run later with automatic quality gates
-/create-prompt Implement authentication
-# Choose option 3 to save
-/run-prompt 001  # Automatically routes to /coder with quality gates
+/architect Implement authentication
+# Automatically executes with TDD workflow
+/run-prompt 001  # Can also run manually with automatic routing and quality gates
 ```
 
 ### For CI/CD

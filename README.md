@@ -1,380 +1,395 @@
-# Claude Code Agent Orchestration System v2 🚀
+# Claude Code TDD Orchestration System 🚀
 
-A simple yet powerful orchestration system for Claude Code that uses specialized agents to manage complex projects from start to finish, with mandatory human oversight and visual testing.
+**AI agents write your tests first, then implement code to pass them—automatically.**
 
-## 🎯 What Is This?
+Type `/architect Build user auth` → Failing tests written → Code implemented → Quality checked → Done.
 
-This is a **custom Claude Code orchestration system** that transforms how you build software projects. Claude Code itself acts as the orchestrator with its 200k context window, managing the big picture while delegating individual tasks to specialized subagents:
+## What Is This?
 
-- **🧠 Claude (You)** - The orchestrator with 200k context managing todos and the big picture
-- **✍️ Coder Subagent** - Implements one todo at a time in its own clean context
-- **✅ Coding Standards Checker Subagent** - Quality gatekeeper that enforces coding standards before testing
-- **👁️ Tester Subagent** - Verifies implementations using Playwright in its own context
-- **🆘 Stuck Subagent** - Human escalation point when ANY problem occurs
+A **Test-Driven Development system for Claude Code** that uses specialized AI agents to build software the right way:
 
-## ⚡ Key Features
+1. **Tests written FIRST** (you get clear specifications before any code)
+2. **Code written to pass tests** (implementation guided by tests)
+3. **Quality gates applied automatically** (standards + visual testing)
+4. **Human in the loop** (you decide when problems occur)
 
-- **No Fallbacks**: When ANY agent hits a problem, you get asked - no assumptions, no workarounds
-- **Visual Testing**: Playwright MCP integration for screenshot-based verification
-- **Todo Tracking**: Always see exactly where your project stands
-- **Simple Flow**: Claude creates todos → delegates to coder → tester verifies → repeat
-- **Human Control**: The stuck agent ensures you're always in the loop
+**The magic:** AI agents work in fresh contexts, each specialized for one job. The orchestrator maintains the big picture while agents handle individual tasks.
 
-## 🚀 Quick Start
+## Quick Start (3 minutes)
 
-### Prerequisites
-
-1. **Claude Code CLI** installed ([get it here](https://docs.claude.com/en/docs/claude-code))
-2. **Node.js** (for Playwright MCP)
-
-### Installation
+### Install
 
 ```bash
-# Clone this repository to a temporary folder
+# Clone to temporary folder
 git clone https://github.com/IncomeStreamSurfer/claude-code-agents-wizard-v2.git /tmp/claude-agents
 
-# Navigate to your project root directory
+# Copy to your project
 cd /path/to/your/project
-
-# Copy the .claude directory to your project
 rsync -av /tmp/claude-agents/.claude/ ./.claude/
-
-# Copy the orchestration documentation to your project root
 cp /tmp/claude-agents/.claude/CLAUDE.md ./AGENTS.md
-
-# Clean up temporary folder
 rm -rf /tmp/claude-agents
 
-# Start Claude Code in your project directory
+# Start Claude Code
 claude
 ```
 
-That's it! The agents are now configured in your project:
-- `.claude/` directory contains all agent definitions and coding standards
-- `AGENTS.md` in your project root documents the orchestration system
+### Your First Feature
 
-## 📖 How to Use
-
-### Starting a Project
-
-When you want to build something, use the `/coder` slash command with your requirements:
-
-```
-You: "/coder Build a todo app with React and TypeScript"
-```
-
-The `/coder` command activates orchestration mode, where Claude will:
-1. Create a detailed todo list using TodoWrite
-2. Delegate the first to-do to the **coder** subagent
-3. The coder implements in its own clean context window
-4. The **coding-standards-checker** validates code quality
-5. Delegate verification to the **tester** subagent (Playwright screenshots)
-6. If ANY problem occurs, the **stuck** subagent asks you what to do
-7. Mark to-do complete and move to the next one
-8. Repeat until project complete
-
-### Other Commands
-
-**`/refactor`** - Improve existing code quality:
 ```bash
-/refactor src/utils.py          # Refactor a specific file
-/refactor src/services/         # Refactor a directory
-/refactor                       # Analyze entire project
+/architect Build a user authentication system with JWT
 ```
 
-### General Usage
+**What happens:**
+1. ✅ Architect creates optimized implementation plan
+2. 🔴 Test-creator writes failing tests (TDD Red phase)
+3. ✅ Coder implements code to make tests pass (TDD Green phase)
+4. ✅ Standards checker enforces code quality
+5. 👁️ Tester verifies with Playwright screenshots
 
-For exploratory tasks, questions, or non-coding requests, interact with Claude Code normally without the `/coder` command. Use `/coder` specifically when you want the full orchestrated development workflow with quality gates.
+**Result:** Working, tested feature with full quality gates.
 
-### The Workflow
+## How It Works
 
+### The TDD Flow
+
+```plaintext
+/architect "Build feature X"
+    ↓
+📝 Architect: Creates optimized prompt → saves to ./prompts/
+    ↓
+🔴 Test-Creator: Writes failing tests FIRST
+    • Happy paths
+    • Edge cases
+    • Error handling
+    ↓
+✅ Coder: Implements code to pass ALL tests
+    ↓
+✅ Standards-Checker: Enforces coding standards
+    ↓
+👁️ Tester: Visual verification with Playwright
+    ↓
+✅ Done: Working code + comprehensive tests
 ```
-USER: "Build X"
+
+### The Agents
+
+- **🏗️ Architect** - Creates optimized implementation plans
+- **🔴 Test-Creator** - Writes tests FIRST (TDD Red phase)
+- **✍️ Coder** - Implements code to pass tests (TDD Green phase)
+- **✅ Standards-Checker** - Enforces code quality rules
+- **👁️ Tester** - Visual verification with Playwright
+- **🆘 Stuck** - Asks you when ANY problem occurs (no silent fallbacks)
+
+---
+
+## 📖 Complete Guide
+
+### All Available Commands
+
+#### `/architect` - TDD Workflow (Recommended)
+
+Best for new features. Tests written first, then implementation:
+
+```bash
+/architect Build a user authentication system with JWT
+```
+
+**Flow:** Architect → Test-Creator (Red) → Coder (Green) → Standards → Tester
+
+**Why:** Tests first = clear specifications, better coverage, quality gates included
+
+#### `/coder` - Direct Orchestration
+
+For manual control and iterative todo-based development:
+
+```bash
+/coder Build a todo app with React and TypeScript
+```
+
+**Flow:** Creates todos → Coder (one todo at a time) → Standards → Tester → Repeat
+
+**Why:** Manual control, iterative workflow, human oversight per todo
+
+#### `/run-prompt` - Execute Saved Prompts
+
+Run one or more prompts from `./prompts/` directory:
+
+```bash
+/run-prompt 005                    # Single prompt
+/run-prompt 005 006 007 --parallel # Parallel execution
+/run-prompt 005 006 --sequential   # Sequential execution
+```
+
+**Why:** Batch operations, flexible execution, intelligent routing (TDD vs direct vs research)
+
+#### `/refactor` - Code Quality
+
+```bash
+/refactor src/utils.py    # Refactor specific file
+/refactor src/services/   # Refactor directory
+```
+
+#### `/verifier` - Code Investigation
+
+```bash
+/verifier Does the codebase have email validation?
+```
+
+### Detailed Workflow Diagrams
+
+<details>
+<summary><strong>Click to see TDD Workflow diagram</strong></summary>
+
+```plaintext
+/architect "Build user authentication"
     ↓
-CLAUDE: Creates detailed todos with TodoWrite
+📝 Architect: Creates optimized prompt
     ↓
-CLAUDE: Invokes coder subagent for todo #1
+🔴 Test-Creator: Writes failing tests
+    • Happy paths, edge cases, errors
+    • Verifies tests fail correctly
     ↓
-CODER (own context): Implements feature
+✅ Coder: Implements code to pass tests
+    • Problem? → Stuck agent asks you
     ↓
-    ├─→ Problem? → Invokes STUCK → You decide → Continue
+✅ Standards-Checker: Reviews code
+    • Violations? → Back to coder
     ↓
-CODER: Reports completion
+👁️ Tester: Playwright verification
+    • Fails? → Stuck agent asks you
     ↓
-CLAUDE: Invokes coding-standards-checker subagent
+✅ Done: Working + tested code
+```
+
+</details>
+
+<details>
+<summary><strong>Click to see Direct Orchestration workflow diagram</strong></summary>
+
+```plaintext
+/coder "Build X"
     ↓
-STANDARDS CHECKER (own context): Reviews code against standards
+📝 Orchestrator: Creates todo list
     ↓
-    ├─→ Violations found? → Invokes CODER with fixes → Re-check
+✅ Coder: Implements todo #1
+    • Problem? → Stuck agent asks you
     ↓
-STANDARDS CHECKER: Reports compliance
+✅ Standards-Checker: Reviews code
+    • Violations? → Back to coder
     ↓
-CLAUDE: Invokes tester subagent
+👁️ Tester: Verifies implementation
+    • Fails? → Stuck agent asks you
     ↓
-TESTER (own context): Playwright screenshots & verification
-    ↓
-    ├─→ Test fails? → Invokes STUCK → You decide → Continue
-    ↓
-TESTER: Reports success
-    ↓
-CLAUDE: Marks todo complete, moves to next
+✅ Todo #1 complete → Next todo
     ↓
 Repeat until all todos done ✅
 ```
 
-## 🛠️ How It Works
+</details>
 
-### Claude (The Orchestrator)
-**Your 200k Context Window**
+### Why This Works
 
-- Creates and maintains comprehensive todo lists
-- Sees the complete project from A-Z
-- Delegates individual todos to specialized subagents
-- Tracks overall progress across all tasks
-- Maintains project state and context
+**Fresh Contexts = Specialized Focus**
+- Each agent gets its own clean context window
+- No context pollution or confusion
+- Agents stay focused on their specific job
 
-**How it works**: Claude IS the orchestrator - it uses its 200k context to manage everything
+**TDD = Quality Built-In**
+- Tests first = clear specifications before coding
+- Implementation guided by tests
+- Better coverage, fewer bugs
 
-### Coder Subagent
-**Fresh Context Per Task**
+**Human in the Loop = No Silent Failures**
+- Stuck agent asks you when problems occur
+- No blind fallbacks or assumptions
+- You maintain control
 
-- Gets invoked with ONE specific todo item
-- Works in its own clean context window
-- Reads coding standards from `.claude/coding-standards/`
-- Writes clean, functional code following standards
-- **Never uses fallbacks** - invokes stuck agent immediately
-- Reports completion back to Claude
+<details>
+<summary><strong>Click to see detailed agent descriptions</strong></summary>
 
-**When it's used**: Claude delegates each coding to-do to this subagent
+#### Architect Agent
+- Analyzes requests, creates optimized prompts
+- Determines parallel vs sequential execution
+- Saves to `./prompts/` and auto-executes
 
-### Coding Standards Checker Subagent
-**Fresh Context Per Review**
+#### Test-Creator Agent (TDD Red)
+- Writes failing tests FIRST
+- Covers happy paths, edge cases, errors
+- Supports pytest, jest, Go test, etc.
+- Provides clear specifications for coder
 
-- Gets invoked after each coder completion
-- Works in its own clean context window
-- Reads coding standards from `.claude/coding-standards/`
-- Verifies code against ALL coding standards
-- **Critical violations**: Sends code back to coder with detailed fixes
-- **No violations**: Passes code to tester
-- Uses Grep tool to efficiently scan for common violations
-- Enforces: no default arguments, no env var access, dependency injection, thin controllers, etc.
+#### Coder Agent (TDD Green)
+- Implements code to pass tests
+- Reads coding standards
+- Never uses fallbacks → invokes stuck agent
 
-**When it's used**: Claude invokes this IMMEDIATELY after coder completes, BEFORE testing begins
+#### Standards-Checker Agent
+- Enforces code quality rules
+- No default args, dependency injection, etc.
+- Violations → back to coder
 
-**Why it exists**: Ensures 100% coding standards compliance before any testing. Acts as a quality gatekeeper - no non-compliant code reaches the tester.
+#### Tester Agent
+- Playwright visual verification
+- Screenshots + interaction testing
+- Never marks failing tests as passing
 
-### Tester Subagent
-**Fresh Context Per Verification**
-
-- Gets invoked after each coder completion
-- Works in its own clean context window
-- Uses **Playwright MCP** to see rendered output
-- Takes screenshots to verify layouts
-- Tests interactions (clicks, forms, navigation)
-- **Never marks failing tests as passing**
-- Reports pass/fail back to Claude
-
-**When it's used**: Claude delegates testing after every implementation
-
-### Stuck Subagent
-**Fresh Context Per Problem**
-
-- Gets invoked when coder or tester hits a problem
-- Works in its own clean context window
-- **ONLY subagent** that can ask you questions
-- Presents clear options for you to choose
+#### Stuck Agent
+- ONLY agent that asks you questions
 - Blocks progress until you respond
-- Returns your decision to the calling agent
-- Ensures no blind fallbacks or workarounds
+- Returns your decision to calling agent
 
-**When it's used**: Whenever ANY subagent encounters ANY problem
+</details>
 
-## 🚨 The "No Fallbacks" Rule
+### Real Example: User Authentication
 
-**This is the key differentiator:**
+<details>
+<summary><strong>Click to see complete TDD workflow example</strong></summary>
 
-Traditional AI: Hits error → tries workaround → might fail silently
-**This system**: Hits error → asks you → you decide → proceeds correctly
-
-Every agent is **hardwired** to invoke the stuck agent rather than use fallbacks. You stay in control.
-
-## 💡 Example Session
-
-```
-You: "Build a landing page with a contact form"
-
-Claude creates todos:
-  [ ] Set up HTML structure
-  [ ] Create hero section
-  [ ] Add contact form with validation
-  [ ] Style with CSS
-  [ ] Test form submission
-
-Claude invokes coder(todo #1: "Set up HTML structure")
-
-Coder (own context): Creates index.html
-Coder: Reports completion to Claude
-
-Claude invokes coding-standards-checker
-
-Standards Checker (own context): Reviews index.html
-Standards Checker: No violations found
-Standards Checker: Reports compliance to Claude
-
-Claude invokes tester("Verify HTML structure loads")
-
-Tester (own context): Uses Playwright to navigate
-Tester: Takes screenshot
-Tester: Verifies HTML structure visible
-Tester: Reports success to Claude
-
-Claude: Marks todo #1 complete ✓
-
-Claude invokes coder(todo #2: "Create hero section")
-
-Coder (own context): Implements hero section
-Coder: Reports completion to Claude
-
-Claude invokes coding-standards-checker
-
-Standards Checker (own context): Reviews hero section code
-Standards Checker: VIOLATION - Function has default argument
-Standards Checker: Invokes coder with violation report
-
-Coder (own context): Fixes default argument violation
-Coder: Reports completion to Claude
-
-Claude invokes coding-standards-checker (re-check)
-
-Standards Checker (own context): Reviews fixed code
-Standards Checker: No violations found
-Standards Checker: Reports compliance to Claude
-
-Claude invokes tester("Verify hero section renders")
-
-Tester (own context): Uses Playwright
-Tester: ERROR - image file not found
-Tester: Invokes stuck subagent
-
-Stuck (own context): Asks YOU:
-  "Hero image 'hero.jpg' not found. How to proceed?"
-  Options:
-  - Use placeholder image
-  - Download from Unsplash
-  - Skip image for now
-
-You choose: "Download from Unsplash"
-
-Stuck: Returns your decision to coder
-Coder: Proceeds with Unsplash download
-Coder: Reports completion to Claude
-
-... and so on until all todos done
+```bash
+You: /architect Build a user authentication system with JWT
 ```
 
-## 📁 Repository Structure
+**What happens:**
+
+1. **Architect** creates `./prompts/001-user-authentication.md`
+
+2. **Test-Creator** writes 6 failing tests:
+   - `test_user_registration_with_valid_data()`
+   - `test_user_login_with_valid_credentials()`
+   - `test_jwt_token_generation()`
+   - `test_jwt_token_validation()`
+   - `test_authentication_with_invalid_credentials()`
+   - `test_token_expiration()`
+
+3. **Coder** implements:
+   - User model
+   - Registration logic
+   - JWT token generation
+   - Authentication middleware
+   - All tests now pass ✅
+
+4. **Standards-Checker** reviews code → No violations ✅
+
+5. **Tester** verifies with Playwright:
+   - Registration flow ✅
+   - Login flow ✅
+   - Takes screenshots
+
+**Result:** Working auth system with 6 tests, all passing, fully validated.
+
+</details>
+
+### What Gets Installed
+
+```
+your-project/
+├── .claude/
+│   ├── agents/        # 6 specialized agents
+│   ├── commands/      # 5 slash commands
+│   ├── coding-standards/  # Quality rules
+│   └── hooks/         # Quality gate automation
+└── AGENTS.md          # Documentation
+```
+
+<details>
+<summary><strong>Click to see full directory structure</strong></summary>
 
 ```
 .
 ├── .claude/
-│   ├── CLAUDE.md              # Project configuration and documentation
 │   ├── agents/
-│   │   ├── coder.md                      # Coder subagent definition
-│   │   ├── refactorer.md                 # Refactorer subagent definition
-│   │   ├── coding-standards-checker.md   # Standards checker subagent definition
-│   │   ├── tester.md                     # Tester subagent definition
-│   │   └── stuck.md                      # Stuck subagent definition
+│   │   ├── test-creator.md
+│   │   ├── coder.md
+│   │   ├── coding-standards-checker.md
+│   │   ├── tester.md
+│   │   ├── refactorer.md
+│   │   ├── verifier.md
+│   │   └── stuck.md
 │   ├── commands/
-│   │   ├── coder.md          # /coder slash command (orchestrated development)
-│   │   └── refactor.md       # /refactor slash command (on-demand refactoring)
-│   └── coding-standards/
-│       ├── README.md         # Coding standards overview
-│       ├── general.md        # Language-agnostic principles
-│       ├── python.md         # Python-specific standards
-│       ├── typescript.md     # TypeScript-specific standards
-│       └── golang.md         # Go-specific standards
-├── .mcp.json                  # Playwright MCP configuration
-├── .gitignore
-└── README.md
+│   │   ├── architect.md
+│   │   ├── run-prompt.md
+│   │   ├── coder.md
+│   │   ├── refactor.md
+│   │   └── verifier.md
+│   ├── coding-standards/
+│   │   ├── general.md
+│   │   ├── python.md
+│   │   ├── typescript.md
+│   │   ├── golang.md
+│   │   └── dotnetcore.md
+│   └── hooks/
+│       ├── post-coder-standards-check.sh
+│       └── post-standards-testing.sh
+├── prompts/           # Generated by /architect
+└── AGENTS.md
 ```
 
-## 🎓 Learn More
-
-### Resources
-
-- **[SEO Grove](https://seogrove.ai)** - AI-powered SEO automation platform
-- **[ISS AI Automation School](https://www.skool.com/iss-ai-automation-school-6342/about)** - Join our community to learn AI automation
-- **[Income Stream Surfers YouTube](https://www.youtube.com/incomestreamsurfers)** - Tutorials, breakdowns, and AI automation content
-
-### Support
-
-Have questions or want to share what you built?
-- Join the [ISS AI Automation School community](https://www.skool.com/iss-ai-automation-school-6342/about)
-- Subscribe to [Income Stream Surfers on YouTube](https://www.youtube.com/incomestreamsurfers)
-- Check out [SEO Grove](https://seogrove.ai) for automated SEO solutions
-
-## 🤝 Contributing
-
-This is an open system! Feel free to:
-- Add new specialized agents
-- Improve existing agent prompts
-- Share your agent configurations
-- Submit PRs with enhancements
-
-## 📝 How It Works Under the Hood
-
-This system leverages Claude Code's [subagent system](https://docs.claude.com/en/docs/claude-code/sub-agents):
-
-1. **CLAUDE.md** provides project documentation and guidelines
-2. **Slash commands** (`.claude/commands/*.md`) activate specific workflows
-3. **`/coder` command** activates orchestration mode with full quality gates
-4. **Subagents** are defined in `.claude/agents/*.md` files
-5. **Each subagent** gets its own fresh context window
-6. **Main Claude** maintains the 200k context with todos and project state
-7. **Playwright MCP** is configured in `.mcp.json` for visual testing
-
-The magic happens because:
-- **Claude (200k context)** = Maintains big picture, manages todos (when using `/coder`)
-- **Coder (fresh context)** = Implements one task at a time following standards
-- **Coding Standards Checker (fresh context)** = Enforces standards compliance before testing
-- **Tester (fresh context)** = Verifies one implementation at a time
-- **Stuck (fresh context)** = Handles one problem at a time with human input
-- **Refactorer (on-demand via `/refactor`)** = Improves existing code quality when needed
-- **Orchestrator (activated via `/coder`)** = Manages the full development workflow with quality gates
-- **Coding standards** = Shared rules in `.claude/coding-standards/` that refactorer, coder, and standards checker follow
-- **Each subagent** has specific tools and hardwired escalation rules
-
-## 🎯 Best Practices
-
-1. **Trust Claude** - Let it create and manage the todo list
-2. **Review screenshots** - The tester provides visual proof of every implementation
-3. **Make decisions when asked** - The stuck agent needs your guidance
-4. **Don't interrupt the flow** - Let subagents complete their work
-5. **Check the todo list** - Always visible, tracks real progress
-
-## 🔥 Pro Tips
-
-- Use `/coder` to activate full orchestration mode for development projects
-- Use `/refactor` command to improve existing code quality on-demand
-- Use `/agents` command to see all available subagents
-- Claude maintains the todo list in its 200k context when using `/coder` - check anytime
-- Screenshots from tester are saved and can be reviewed
-- Each subagent has specific tools - check their `.md` files
-- Subagents get fresh contexts - no context pollution!
-- For exploration or questions, use Claude normally without slash commands
-
-## 📜 License
-
-MIT - Use it, modify it, share it!
-
-## 🙏 Credits
-
-Built by [Income Stream Surfer](https://www.youtube.com/incomestreamsurfers)
-
-Powered by Claude Code's agent system and Playwright MCP.
+</details>
 
 ---
 
-**Ready to build something amazing?** Just run `claude` in this directory and use `/coder` to activate orchestration mode! 🚀
+## Advanced Topics
 
-Example: `/coder Build a REST API with authentication and user management`
+<details>
+<summary><strong>Best Practices</strong></summary>
+
+1. **Use `/architect` for new features** - TDD workflow with tests first
+2. **Review test specs** - Test-creator provides clear contracts
+3. **Review screenshots** - Visual proof of every implementation
+4. **Trust the stuck agent** - Answer when asked
+5. **Trust the TDD process** - Red → Green → Refactor
+
+</details>
+
+<details>
+<summary><strong>Pro Tips</strong></summary>
+
+- Use `/architect` for new features (recommended)
+- Use `/coder` for manual orchestration
+- Use `/run-prompt --parallel` for batch operations
+- Screenshots saved for review
+- Frontmatter overrides: `executor: tdd | coder | general-purpose`
+- Check `.claude/agents/*.md` for agent details
+
+</details>
+
+<details>
+<summary><strong>How It Works Under the Hood</strong></summary>
+
+Uses Claude Code's [subagent system](https://docs.claude.com/en/docs/claude-code/sub-agents):
+
+- Slash commands (`.claude/commands/*.md`) activate workflows
+- Subagents (`.claude/agents/*.md`) get fresh context windows
+- Hooks (`.claude/hooks/*.sh`) automate quality gates
+- Coding standards (`.claude/coding-standards/`) shared across agents
+- Playwright MCP for visual testing
+
+Each agent has specific tools and hardwired stuck agent escalation.
+
+</details>
+
+---
+
+## Community & Support
+
+- **[Income Stream Surfers YouTube](https://www.youtube.com/incomestreamsurfers)** - Tutorials and AI automation
+- **[ISS AI Automation School](https://www.skool.com/iss-ai-automation-school-6342/about)** - Community
+- **[SEO Grove](https://seogrove.ai)** - AI-powered SEO automation
+
+---
+
+**Ready to build something amazing?**
+
+```bash
+# In your project directory
+claude
+
+# Then use TDD workflow (recommended)
+/architect Build a REST API with authentication
+```
+
+Tests written first → Code to pass tests → Quality gates → Done ✅
+
+---
+
+**Built by** [Income Stream Surfer](https://www.youtube.com/incomestreamsurfers) | **License:** MIT
